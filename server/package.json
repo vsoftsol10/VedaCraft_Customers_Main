@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node --env-file=.env src/index.js",
+    "start": "node src/index.js",
     "lint": "eslint src/**/*.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
