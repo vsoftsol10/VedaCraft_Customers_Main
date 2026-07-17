@@ -14,7 +14,11 @@
     "cart": "कार्ट",
     "wishlist": "विशलिस्ट",
     "deliveryIn": "2 दिनों में डिलीवरी",
-    "changeLanguage": "भाषा बदलें"
+    "changeLanguage": "भाषा बदलें",
+    "signedInAs": "Signed in as",
+    "myProfile": "My Profile",
+    "orders": "Orders",
+    "logout": "Logout"
   },
   "search": {
     "placeholder": "उत्पाद खोजें...",
@@ -104,7 +108,17 @@
     "viewOrders": "ऑर्डर देखें",
     "noItems": "चेकआउट के लिए कोई सामान नहीं",
     "noItemsDesc": "अपनी कार्ट में सामान जोड़ें या Buy Now का उपयोग करें।",
-    "selectedPayment": "चयनित"
+    "selectedPayment": "चयनित",
+    "buyNow": "Buy Now",
+    "loginAgain": "Please login again to continue.",
+    "placeOrderFailed": "Failed to place order. Please try again.",
+    "paymentInitiateFailed": "Unable to initiate payment. Please try again.",
+    "razorpayLoadFailed": "Unable to load payment gateway. Please try again.",
+    "paymentDescription": "Veda Craft order payment",
+    "paymentFailed": "Payment failed: {{message}}",
+    "paymentStartFailed": "Unable to start payment. Please try again.",
+    "deliveryUnavailable": "Delivery unavailable for this pincode",
+    "estimatedDelivery": "Estimated delivery in {{days}} days"
   },
   "address": {
     "title": "पता जोड़ें",
@@ -132,7 +146,9 @@
     "requiredAddress": "पता आवश्यक है",
     "requiredCity": "शहर आवश्यक है",
     "requiredState": "राज्य आवश्यक है",
-    "requiredPincode": "पिनकोड आवश्यक है"
+    "requiredPincode": "पिनकोड आवश्यक है",
+    "editTitle": "Edit Address",
+    "confirmDelete": "Are you sure you want to delete this address?"
   },
   "product": {
     "notFound": "उत्पाद नहीं मिला",
@@ -176,7 +192,27 @@
     "loginButton": "लॉगिन",
     "orContinueWith": "या जारी रखें",
     "noAccount": "खाता नहीं है?",
-    "signUp": "साइन अप करें"
+    "signUp": "साइन अप करें",
+    "accountTitle": "Login or Signup",
+    "accountSubtitle": "Continue with mobile number or email",
+    "mobileNumber": "Mobile Number",
+    "emailAddress": "Email Address",
+    "mobilePlaceholder": "Enter mobile number",
+    "invalidMobile": "Enter a valid mobile number",
+    "invalidEmail": "Enter a valid email address",
+    "invalidOtp": "Enter a valid OTP",
+    "invalidMobileOtp": "Enter a valid mobile OTP",
+    "requestOtp": "Request OTP",
+    "verifyOtp": "Verify OTP",
+    "codeSentTo": "Code sent to",
+    "changeMethod": "Change {{method}}",
+    "verifyAndLogin": "Verify & Login",
+    "resendPrompt": "Didn't receive the code?",
+    "resendOtp": "Resend OTP",
+    "or": "OR",
+    "continueWithGoogle": "Continue with Google",
+    "secureLogin": "Secure login",
+    "dataSafe": "Your data is safe"
   },
   "footer": {
     "tagline": "ग्रामीण महिला उद्यमियों, स्वयं सहायता समूहों और कारीगरों को सशक्त बनाना।",
@@ -196,7 +232,8 @@
   "productCard": {
     "addToCart": "कार्ट में जोड़ें",
     "wishlist": "विशलिस्ट",
-    "addedToCart": "जोड़ा गया!"
+    "addedToCart": "जोड़ा गया!",
+    "add": "जोड़ें"
   },
   "voiceSearch": {
     "listening": "सुन रहा है...",
@@ -206,5 +243,151 @@
     "errNoSpeech": "कोई आवाज़ नहीं मिली। फिर प्रयास करें।",
     "errMicUnavailable": "माइक्रोफ़ोन अनुपलब्ध है",
     "errUnsupported": "इस ब्राउज़र में वॉयस सर्च समर्थित नहीं है"
+  },
+  "hero": {
+    "eco": {
+      "title": "ईको-फ्रेंडली विकल्प,\nसुंदर प्रभाव",
+      "subtitle": "ऐसे सोच-समझकर बनाए गए उत्पाद खोजें जो धरती के लिए अच्छे हैं और कुशल कारीगरों व समुदायों को सहयोग देते हैं।",
+      "button": "ईको उत्पाद खरीदें"
+    },
+    "wellness": {
+      "title": "मन, शरीर और आत्मा को\nपोषण दें",
+      "subtitle": "संतुलित और शांत जीवनशैली के लिए हमारा प्राकृतिक वेलनेस संग्रह देखें।",
+      "button": "वेलनेस खरीदें"
+    },
+    "food": {
+      "title": "प्रकृति की शुद्धता\nका स्वाद लें",
+      "subtitle": "नैतिक रूप से प्राप्त ऑर्गेनिक खाद्य सामग्री, खेत से सीधे आपकी मेज तक।",
+      "button": "ऑर्गेनिक फूड खरीदें"
+    },
+    "craft": {
+      "title": "अनूठे कारीगर\nशिल्प खोजें",
+      "subtitle": "कुशल कारीगरों द्वारा हस्तनिर्मित कलाकृतियां, जो प्राचीन परंपराओं और संस्कृति को संजोती हैं।",
+      "button": "शिल्प खरीदें"
+    },
+    "fashion": {
+      "title": "सस्टेनेबल और\nएथिकल फैशन",
+      "subtitle": "ईको-फ्रेंडली कपड़ों से अपना अंदाज दिखाएं, जो अच्छे दिखते हैं और अच्छा करते हैं।",
+      "button": "फैशन खरीदें"
+    },
+    "decor": {
+      "title": "आपके घर के लिए\nहस्तनिर्मित सजावट",
+      "subtitle": "सुंदर, देसी सजावट से अपनी जगह बदलें, जो अपनी अलग कहानी कहती है।",
+      "button": "डेकोर खरीदें"
+    }
+  },
+  "pages": {
+    "eco": {
+      "title": "ईको-फ्रेंडली उत्पाद"
+    },
+    "wellness": {
+      "title": "वेलनेस उत्पाद"
+    },
+    "food": {
+      "title": "ऑर्गेनिक फूड"
+    },
+    "craft": {
+      "title": "कारीगर शिल्प"
+    },
+    "fashion": {
+      "title": "सस्टेनेबल फैशन"
+    },
+    "decor": {
+      "title": "होम डेकोर आइटम"
+    }
+  },
+  "filter": {
+    "loadingProducts": "उत्पाद लोड हो रहे हैं..."
+  },
+  "profile": {
+    "sidebar": {
+      "myProfile": "मेरी प्रोफ़ाइल",
+      "myOrders": "मेरे ऑर्डर",
+      "mySizeProfile": "मेरी साइज़ प्रोफ़ाइल",
+      "myEcoImpact": "मेरा ईको प्रभाव",
+      "notifications": "सूचनाएं",
+      "address": "पता",
+      "helpSupport": "सहायता और समर्थन",
+      "logout": "लॉगआउट"
+    },
+    "uploadFailed": "Photo upload failed",
+    "photoUpdated": "Photo updated successfully",
+    "changePhoto": "Change photo"
+  },
+  "sizeProfile": {
+    "title": "साइज़ प्रोफ़ाइल",
+    "subtitle": "बेहतर फिट सुझावों के लिए अपनी पसंदीदा साइज़ और माप सेव करें।",
+    "standardSizes": "मानक साइज़",
+    "men": "पुरुष",
+    "women": "महिला",
+    "standardTopSize": "मानक टॉप साइज़",
+    "standardBottomSize": "मानक बॉटम साइज़",
+    "exactMeasurements": "सटीक माप",
+    "inches": "इंच",
+    "centimeters": "सेंटीमीटर",
+    "shoulder": "कंधा",
+    "chestBust": "छाती / बस्ट",
+    "waist": "कमर",
+    "hips": "कूल्हे",
+    "savedSuccessfully": "सफलतापूर्वक सेव हुआ",
+    "saveProfile": "प्रोफ़ाइल सेव करें"
+  },
+  "addressPage": {
+    "title": "Saved Addresses",
+    "addNew": "Add New Address",
+    "empty": "No addresses saved",
+    "emptyDesc": "Add an address to make checkout faster."
+  },
+  "profileCompletion": {
+    "noSession": "No active session found. Please login again.",
+    "requiredFields": "Please fill all required fields.",
+    "invalidPhone": "Enter a valid phone number.",
+    "saveError": "Unable to save profile. Please try again.",
+    "title": "Complete Your Profile",
+    "subtitle": "Tell us a little more before continuing",
+    "genderOptional": "Gender (Optional)",
+    "selectGender": "Select gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "dobOptional": "Date of Birth (Optional)",
+    "saving": "Saving...",
+    "completeProfile": "Complete Profile",
+    "securePrivate": "Your information stays secure and private"
+  },
+  "orders": {
+    "title": "My Orders",
+    "empty": "No orders yet",
+    "emptyDesc": "Your orders will appear here after checkout.",
+    "itemCount": "{{count}} item",
+    "loadingTracking": "Loading order tracking...",
+    "notFound": "Order not found",
+    "backToOrders": "Back to orders",
+    "trackingTitle": "Order {{id}}",
+    "placedOn": "Placed on {{date}}",
+    "cancelConfirm": "Are you sure you want to cancel this order?",
+    "cancelError": "Unable to cancel order. Please try again.",
+    "cancelling": "Cancelling...",
+    "cancelOrder": "Cancel Order",
+    "ordered": "Ordered",
+    "cancelledMessage": "Order cancelled",
+    "cancelledDesc": "This order has been cancelled.",
+    "deliveredOn": "Delivered on {{date}}",
+    "deliveredDesc": "Your order has been delivered.",
+    "arrivingBy": "Arriving by {{date}}",
+    "onTheWay": "Your order is on the way.",
+    "deliveryAddress": "Delivery Address",
+    "addressUnavailable": "Address unavailable",
+    "orderDetails": "Order Details",
+    "itemsLabel": "Items",
+    "payment": "Payment",
+    "total": "Total",
+    "orderItems": "Order Items",
+    "itemDetailsUnavailable": "Item details unavailable",
+    "quantity": "Quantity",
+    "totalAmount": "Total Amount",
+    "status": {
+      "Cancelled": "Cancelled"
+    }
   }
 }

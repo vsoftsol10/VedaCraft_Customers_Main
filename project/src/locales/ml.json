@@ -14,7 +14,11 @@
     "cart": "കാർട്ട്",
     "wishlist": "വിഷ്‌ലിസ്റ്റ്",
     "deliveryIn": "2 ദിവസത്തിനുള്ളിൽ ഡെലിവറി",
-    "changeLanguage": "ഭാഷ മാറ്റുക"
+    "changeLanguage": "ഭാഷ മാറ്റുക",
+    "signedInAs": "Signed in as",
+    "myProfile": "My Profile",
+    "orders": "Orders",
+    "logout": "Logout"
   },
   "search": {
     "placeholder": "ഉൽപ്പന്നങ്ങൾ തിരയുക...",
@@ -104,7 +108,17 @@
     "viewOrders": "ഓർഡറുകൾ കാണുക",
     "noItems": "ചെക്ക്ഔട്ട് ചെയ്യാൻ ഇനങ്ങൾ ഇല്ല",
     "noItemsDesc": "നിങ്ങളുടെ കാർട്ടിൽ ഇനങ്ങൾ ചേർക്കുക അല്ലെങ്കിൽ Buy Now ഉപയോഗിക്കുക.",
-    "selectedPayment": "തിരഞ്ഞെടുത്തു"
+    "selectedPayment": "തിരഞ്ഞെടുത്തു",
+    "buyNow": "Buy Now",
+    "loginAgain": "Please login again to continue.",
+    "placeOrderFailed": "Failed to place order. Please try again.",
+    "paymentInitiateFailed": "Unable to initiate payment. Please try again.",
+    "razorpayLoadFailed": "Unable to load payment gateway. Please try again.",
+    "paymentDescription": "Veda Craft order payment",
+    "paymentFailed": "Payment failed: {{message}}",
+    "paymentStartFailed": "Unable to start payment. Please try again.",
+    "deliveryUnavailable": "Delivery unavailable for this pincode",
+    "estimatedDelivery": "Estimated delivery in {{days}} days"
   },
   "address": {
     "title": "വിലാസം ചേർക്കുക",
@@ -132,7 +146,9 @@
     "requiredAddress": "വിലാസം ആവശ്യമാണ്",
     "requiredCity": "നഗരം ആവശ്യമാണ്",
     "requiredState": "സംസ്ഥാനം ആവശ്യമാണ്",
-    "requiredPincode": "പിൻകോഡ് ആവശ്യമാണ്"
+    "requiredPincode": "പിൻകോഡ് ആവശ്യമാണ്",
+    "editTitle": "Edit Address",
+    "confirmDelete": "Are you sure you want to delete this address?"
   },
   "product": {
     "notFound": "ഉൽപ്പന്നം കണ്ടെത്തിയില്ല",
@@ -176,7 +192,27 @@
     "loginButton": "ലോഗിൻ",
     "orContinueWith": "അല്ലെങ്കിൽ തുടരുക",
     "noAccount": "അക്കൗണ്ട് ഇല്ലേ?",
-    "signUp": "സൈൻ അപ്പ്"
+    "signUp": "സൈൻ അപ്പ്",
+    "accountTitle": "Login or Signup",
+    "accountSubtitle": "Continue with mobile number or email",
+    "mobileNumber": "Mobile Number",
+    "emailAddress": "Email Address",
+    "mobilePlaceholder": "Enter mobile number",
+    "invalidMobile": "Enter a valid mobile number",
+    "invalidEmail": "Enter a valid email address",
+    "invalidOtp": "Enter a valid OTP",
+    "invalidMobileOtp": "Enter a valid mobile OTP",
+    "requestOtp": "Request OTP",
+    "verifyOtp": "Verify OTP",
+    "codeSentTo": "Code sent to",
+    "changeMethod": "Change {{method}}",
+    "verifyAndLogin": "Verify & Login",
+    "resendPrompt": "Didn't receive the code?",
+    "resendOtp": "Resend OTP",
+    "or": "OR",
+    "continueWithGoogle": "Continue with Google",
+    "secureLogin": "Secure login",
+    "dataSafe": "Your data is safe"
   },
   "footer": {
     "tagline": "ഗ്രാമീണ വനിതാ സംരംഭകരെ, സ്വ-സഹായ ഗ്രൂപ്പുകളെ, കരകൗശല തൊഴിലാളികളെ ശക്തിപ്പെടുത്തുന്നു.",
@@ -196,7 +232,8 @@
   "productCard": {
     "addToCart": "കാർട്ടിൽ ചേർക്കുക",
     "wishlist": "വിഷ്‌ലിസ്റ്റ്",
-    "addedToCart": "ചേർത്തു!"
+    "addedToCart": "ചേർത്തു!",
+    "add": "ചേർക്കുക"
   },
   "voiceSearch": {
     "listening": "ശ്രദ്ധിക്കുന്നു...",
@@ -206,5 +243,151 @@
     "errNoSpeech": "സംസാരം ഒന്നും കണ്ടെത്തിയില്ല. വീണ്ടും ശ്രമിക്കുക.",
     "errMicUnavailable": "മൈക്രോഫോൺ ലഭ്യമല്ല",
     "errUnsupported": "ഈ ബ്രൗസറിൽ വോയ്‌സ് സെർച്ച് പിന്തുണയ്ക്കുന്നില്ല"
+  },
+  "hero": {
+    "eco": {
+      "title": "പരിസ്ഥിതി സൗഹൃദ തിരഞ്ഞെടുപ്പുകൾ,\nമനോഹരമായ സ്വാധീനം",
+      "subtitle": "ഭൂമിക്കും പ്രാവീണ്യമുള്ള കരകൗശലജ്ഞർക്കും സമൂഹങ്ങൾക്കും പിന്തുണ നൽകുന്ന ചിന്താപൂർവ്വം തയ്യാറാക്കിയ ഉൽപ്പന്നങ്ങൾ കണ്ടെത്തൂ.",
+      "button": "ഈകോ ഉൽപ്പന്നങ്ങൾ വാങ്ങൂ"
+    },
+    "wellness": {
+      "title": "മനസും ശരീരവും ആത്മാവും\nപോഷിപ്പിക്കുക",
+      "subtitle": "സമതുലിതവും സമാധാനപരവുമായ ജീവിതശൈലിക്കായി ഞങ്ങളുടെ പ്രകൃതിദത്ത വെൽനെസ് ശേഖരം കാണൂ.",
+      "button": "വെൽനെസ് വാങ്ങൂ"
+    },
+    "food": {
+      "title": "പ്രകൃതിയുടെ ശുദ്ധി\nരുചിക്കൂ",
+      "subtitle": "നൈതികമായി ലഭ്യമാക്കിയ ഓർഗാനിക് ഭക്ഷണങ്ങൾ, ഫാമിൽ നിന്ന് നേരിട്ട് നിങ്ങളുടെ മേശയിലേക്ക്.",
+      "button": "ഓർഗാനിക് ഭക്ഷണം വാങ്ങൂ"
+    },
+    "craft": {
+      "title": "അനന്യമായ കരകൗശല\nസൃഷ്ടികൾ കണ്ടെത്തൂ",
+      "subtitle": "പഴയ പാരമ്പര്യങ്ങളും സംസ്കാരവും സംരക്ഷിക്കുന്ന നിപുണരായ കരകൗശലജ്ഞരുടെ കൈവേലകൾ.",
+      "button": "ക്രാഫ്റ്റ്സ് വാങ്ങൂ"
+    },
+    "fashion": {
+      "title": "സ്ഥിരതയുള്ളതും\nനൈതികവുമായ ഫാഷൻ",
+      "subtitle": "നന്നായി തോന്നുകയും നന്മ ചെയ്യുകയും ചെയ്യുന്ന പരിസ്ഥിതി സൗഹൃദ വസ്ത്രങ്ങളിലൂടെ നിങ്ങളെ പ്രകടിപ്പിക്കൂ.",
+      "button": "ഫാഷൻ വാങ്ങൂ"
+    },
+    "decor": {
+      "title": "നിങ്ങളുടെ വീട്ടിലേക്കുള്ള\nകൈവേല അലങ്കാരം",
+      "subtitle": "സ്വന്തം കഥ പറയുന്ന മനോഹരമായ ഗ്രാമീണ അലങ്കാരങ്ങളിലൂടെ നിങ്ങളുടെ ഇടം മാറ്റൂ.",
+      "button": "ഡെക്കർ വാങ്ങൂ"
+    }
+  },
+  "pages": {
+    "eco": {
+      "title": "ഈകോ ഫ്രണ്ട്ലി ഉൽപ്പന്നങ്ങൾ"
+    },
+    "wellness": {
+      "title": "വെൽനെസ് ഉൽപ്പന്നങ്ങൾ"
+    },
+    "food": {
+      "title": "ഓർഗാനിക് ഭക്ഷണം"
+    },
+    "craft": {
+      "title": "കരകൗശല വസ്തുക്കൾ"
+    },
+    "fashion": {
+      "title": "സ്ഥിരതയുള്ള ഫാഷൻ"
+    },
+    "decor": {
+      "title": "ഹോം ഡെക്കർ ഇനങ്ങൾ"
+    }
+  },
+  "filter": {
+    "loadingProducts": "ഉൽപ്പന്നങ്ങൾ ലോഡ് ചെയ്യുന്നു..."
+  },
+  "profile": {
+    "sidebar": {
+      "myProfile": "എന്റെ പ്രൊഫൈൽ",
+      "myOrders": "എന്റെ ഓർഡറുകൾ",
+      "mySizeProfile": "എന്റെ സൈസ് പ്രൊഫൈൽ",
+      "myEcoImpact": "എന്റെ ഈകോ സ്വാധീനം",
+      "notifications": "അറിയിപ്പുകൾ",
+      "address": "വിലാസം",
+      "helpSupport": "സഹായവും പിന്തുണയും",
+      "logout": "ലോഗൗട്ട്"
+    },
+    "uploadFailed": "Photo upload failed",
+    "photoUpdated": "Photo updated successfully",
+    "changePhoto": "Change photo"
+  },
+  "sizeProfile": {
+    "title": "സൈസ് പ്രൊഫൈൽ",
+    "subtitle": "മികച്ച ഫിറ്റ് നിർദ്ദേശങ്ങൾക്കായി നിങ്ങളുടെ ഇഷ്ട സൈസുകളും അളവുകളും സംരക്ഷിക്കുക.",
+    "standardSizes": "സ്റ്റാൻഡേർഡ് സൈസുകൾ",
+    "men": "പുരുഷൻ",
+    "women": "സ്ത്രീ",
+    "standardTopSize": "സ്റ്റാൻഡേർഡ് ടോപ്പ് സൈസ്",
+    "standardBottomSize": "സ്റ്റാൻഡേർഡ് ബോട്ടം സൈസ്",
+    "exactMeasurements": "കൃത്യമായ അളവുകൾ",
+    "inches": "ഇഞ്ച്",
+    "centimeters": "സെന്റിമീറ്റർ",
+    "shoulder": "തോൾ",
+    "chestBust": "നെഞ്ച് / ബസ്റ്റ്",
+    "waist": "അര",
+    "hips": "ഹിപ്സ്",
+    "savedSuccessfully": "വിജയകരമായി സംരക്ഷിച്ചു",
+    "saveProfile": "പ്രൊഫൈൽ സംരക്ഷിക്കുക"
+  },
+  "addressPage": {
+    "title": "Saved Addresses",
+    "addNew": "Add New Address",
+    "empty": "No addresses saved",
+    "emptyDesc": "Add an address to make checkout faster."
+  },
+  "profileCompletion": {
+    "noSession": "No active session found. Please login again.",
+    "requiredFields": "Please fill all required fields.",
+    "invalidPhone": "Enter a valid phone number.",
+    "saveError": "Unable to save profile. Please try again.",
+    "title": "Complete Your Profile",
+    "subtitle": "Tell us a little more before continuing",
+    "genderOptional": "Gender (Optional)",
+    "selectGender": "Select gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "dobOptional": "Date of Birth (Optional)",
+    "saving": "Saving...",
+    "completeProfile": "Complete Profile",
+    "securePrivate": "Your information stays secure and private"
+  },
+  "orders": {
+    "title": "My Orders",
+    "empty": "No orders yet",
+    "emptyDesc": "Your orders will appear here after checkout.",
+    "itemCount": "{{count}} item",
+    "loadingTracking": "Loading order tracking...",
+    "notFound": "Order not found",
+    "backToOrders": "Back to orders",
+    "trackingTitle": "Order {{id}}",
+    "placedOn": "Placed on {{date}}",
+    "cancelConfirm": "Are you sure you want to cancel this order?",
+    "cancelError": "Unable to cancel order. Please try again.",
+    "cancelling": "Cancelling...",
+    "cancelOrder": "Cancel Order",
+    "ordered": "Ordered",
+    "cancelledMessage": "Order cancelled",
+    "cancelledDesc": "This order has been cancelled.",
+    "deliveredOn": "Delivered on {{date}}",
+    "deliveredDesc": "Your order has been delivered.",
+    "arrivingBy": "Arriving by {{date}}",
+    "onTheWay": "Your order is on the way.",
+    "deliveryAddress": "Delivery Address",
+    "addressUnavailable": "Address unavailable",
+    "orderDetails": "Order Details",
+    "itemsLabel": "Items",
+    "payment": "Payment",
+    "total": "Total",
+    "orderItems": "Order Items",
+    "itemDetailsUnavailable": "Item details unavailable",
+    "quantity": "Quantity",
+    "totalAmount": "Total Amount",
+    "status": {
+      "Cancelled": "Cancelled"
+    }
   }
 }
