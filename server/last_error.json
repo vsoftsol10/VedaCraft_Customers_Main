@@ -1,5 +1,6 @@
 {
-  "message": "permission denied for table serviceable_pincodes",
-  "path": "/api/v1/delivery/check/600001",
-  "method": "GET"
+  "message": "Email link is invalid or has expired",
+  "stack": "AuthApiError: Email link is invalid or has expired\n    at handleError (D:\\Programs\\veda_craft\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:84:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async _handleRequest (D:\\Programs\\veda_craft\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:127:9)\n    at async _request (D:\\Programs\\veda_craft\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:109:18)\n    at async SupabaseAuthClient.verifyOtp (D:\\Programs\\veda_craft\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\GoTrueClient.js:1973:37)\n    at async file:///D:/Programs/veda_craft/server/src/routes/auth.js:122:29",
+  "path": "/api/v1/auth/verify-email-otp",
+  "method": "POST"
 }

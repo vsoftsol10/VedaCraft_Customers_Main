@@ -22,6 +22,9 @@ const PRODUCT_COLUMNS = `
     id,
     name,
     slug
+  ),
+  detail:product_details (
+    specifications
   )
 `;
 
@@ -34,11 +37,14 @@ const toProductDto = (product) => {
     : imageUrl
     ? [imageUrl]
     : [];
+  const detail = Array.isArray(product.detail) ? product.detail[0] : product.detail;
+  const specifications = detail?.specifications || {};
 
   return {
     id: product.id,
     category_id: product.category_id,
-    category: product.category?.name || null,
+    category: specifications.subcategory || product.category?.name || null,
+    mainCategory: product.category?.name || null,
     category_slug: product.category?.slug || null,
     name: product.name,
     slug: product.slug,
@@ -52,6 +58,7 @@ const toProductDto = (product) => {
     is_active: product.is_active,
     image: imageUrl,
     images,
+    specifications,
     created_at: product.created_at,
     updated_at: product.updated_at,
   };

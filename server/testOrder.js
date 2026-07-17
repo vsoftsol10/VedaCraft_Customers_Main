@@ -1,12 +1,12 @@
 async function testOrder() {
   try {
-    const res = await fetch('http://localhost:5000/api/v1/orders/test', {
+    const res = await fetch('https://veda-craft.onrender.com/api/v1/orders/test', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        items: [{name: 'Test', quantity: 1, price: 100}],
+        items: [{ name: 'Test', quantity: 1, price: 100 }],
         address: null,
         paymentMethod: 'Cash on Delivery',
         total: 100,
@@ -14,7 +14,7 @@ async function testOrder() {
         product: 'Test Product'
       })
     });
-    
+
     const data = await res.json();
     console.log('Status:', res.status);
     console.log('Response:', data);

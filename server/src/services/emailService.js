@@ -14,6 +14,42 @@ const getTransporter = () => {
   });
 };
 
+export const sendLoginOtpEmail = async ({ email, otp }) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error('Email credentials (EMAIL_USER, EMAIL_PASS) not configured.');
+    }
+
+    const transporter = getTransporter();
+    const mailOptions = {
+      from: '"VedaCraft" <' + process.env.EMAIL_USER + '>',
+      to: email,
+      subject: 'Your VedaCraft login OTP',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; color: #1f2937;">
+          <div style="padding: 20px 0; text-align: center;">
+            <h1 style="color: #1c6b32; margin: 0;">VedaCraft</h1>
+          </div>
+          <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 24px;">
+            <h2 style="margin: 0 0 12px; color: #111827;">Login OTP</h2>
+            <p style="margin: 0 0 18px; line-height: 1.5;">Use this one-time password to sign in to your VedaCraft account.</p>
+            <div style="font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #1c6b32; text-align: center; padding: 18px; background: #f3f7f4; border-radius: 8px;">
+              ${otp}
+            </div>
+            <p style="margin: 18px 0 0; color: #6b7280; font-size: 13px;">This code expires soon. If you did not request it, you can ignore this email.</p>
+          </div>
+        </div>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Login OTP email sent: %s', info.messageId);
+  } catch (error) {
+    console.error('Failed to send login OTP email:', error.message);
+    throw error;
+  }
+};
+
 /**
  * Sends an order confirmation email
  * @param {Object} params

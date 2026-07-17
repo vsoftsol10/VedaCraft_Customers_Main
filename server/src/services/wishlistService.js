@@ -80,7 +80,6 @@ export const getWishlist = async (userId, token) => {
 
 export const toggleItem = async (userId, product, token) => {
   const productId = Number(product?.id ?? product?.product_id);
-  console.log('[TRACE] wishlistService.toggleItem received product/raw:', product, 'mapped productId:', productId);
 
   if (!Number.isFinite(productId) || productId <= 0) {
     throw new AppError('Product id is required', 400);
@@ -103,8 +102,6 @@ export const toggleItem = async (userId, product, token) => {
   const { error: insertError } = await supabase
     .from('wishlists')
     .insert({ user_id: userId, product_id: productId });
-
-  console.log('[TRACE] Supabase insert attempted with product_id =', productId, 'user_id =', userId);
 
   if (insertError) throw new AppError(insertError.message, 500);
 

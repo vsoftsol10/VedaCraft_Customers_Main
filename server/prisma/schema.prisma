@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+   schemas = ["public", "auth"]
+   }
+
+model Category {
+  id        BigInt    @id(map: "categories_pkey") @default(autoincrement())
+  name      String
+  slug      String    @unique(map: "categories_slug_key")
+  imageUrl  String?   @map("image_url")
+  createdAt DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  products  Product[]
+
+  @@index([slug], map: "idx_categories_slug")
+  @@map("categories")
+  @@schema("public")
+}
+
+model Product {
+  id            BigInt         @id(map: "products_pkey1") @default(autoincrement())
+  categoryId    BigInt         @map("category_id")
+  name          String
+  slug          String         @unique(map: "products_slug_key1")
+  description   String?
+  price         Decimal        @default(0) @db.Decimal(10, 2)
+  discountPrice Decimal?       @map("discount_price") @db.Decimal(10, 2)
+  stock         Int            @default(0)
+  rating        Decimal        @default(0) @db.Decimal(3, 2)
+  totalReviews  Int            @default(0) @map("total_reviews")
+  isFeatured    Boolean        @default(false) @map("is_featured")
+  isActive      Boolean        @default(true) @map("is_active")
+  imageUrl      String?        @map("image_url")
+  imagePath     String?        @map("image_path")
+  createdAt     DateTime       @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict, map: "products_category_id_fkey")
+  detail        ProductDetail?
+
+  @@index([categoryId], map: "idx_products_category_id")
+  @@index([isActive, createdAt], map: "idx_current_products_active_created")
+  @@index([isActive, isFeatured], map: "idx_current_products_active_featured")
+  @@index([isActive, rating], map: "idx_current_products_active_rating")
+  @@index([imagePath], map: "idx_current_products_image_path")
+  @@map("products")
+  @@schema("public")
+}
+
+model ProductDetail {
+  id               BigInt   @id @default(autoincrement())
+  productId        BigInt   @unique @map("product_id")
+  subtitle         String?
+  fullDescription  String?  @map("full_description")
+  howToUse         String?  @map("how_to_use")
+  coreInstructions String?  @map("core_instructions")
+  careInstructions String?  @map("care_instructions")
+  materials        Json?
+  ingredients      Json?
+  highlights       Json?
+  specifications   Json?
+  dimensions       Json?
+  shippingInfo     Json?    @map("shipping_info")
+  seoTitle         String?  @map("seo_title")
+  seoDescription   String?  @map("seo_description")
+  createdAt        DateTime @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "product_details_product_id_fkey")
+
+  @@map("product_details")
+  @@schema("public")
+}
