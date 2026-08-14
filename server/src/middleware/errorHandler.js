@@ -9,12 +9,32 @@
 // eslint-disable-next-line no-unused-vars
 import fs from 'fs';
 
+const isSupabaseNetworkError = (err) => {
+  const causeCode = err?.cause?.code;
+  return (
+    err?.name === 'AuthRetryableFetchError' ||
+    err?.message === 'fetch failed' ||
+    causeCode === 'ENOTFOUND' ||
+    causeCode === 'ETIMEDOUT' ||
+    causeCode === 'ECONNREFUSED'
+  );
+};
+
 export const errorHandler = (err, req, res, next) => {
+  const supabaseNetworkError = isSupabaseNetworkError(err);
+
   // Log the full error in development
   if (process.env.NODE_ENV === 'development') {
     const errDetails = {
       message: err.message,
       stack: err.stack,
+      cause: err.cause
+        ? {
+            message: err.cause.message,
+            code: err.cause.code,
+            hostname: err.cause.hostname,
+          }
+        : undefined,
       path: req.path,
       method: req.method,
     };
@@ -28,13 +48,15 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   // Determine HTTP status code
-  const statusCode = err.statusCode || err.status || 500;
+  const statusCode = supabaseNetworkError ? 503 : err.statusCode || err.status || 500;
 
   // Build the response payload
   const payload = {
     success: false,
     status: statusCode,
-    message: err.message || 'Internal Server Error',
+    message: supabaseNetworkError
+      ? 'Unable to reach Supabase. Check SUPABASE_URL in server/.env and your network/DNS connection.'
+      : err.message || 'Internal Server Error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   };
 

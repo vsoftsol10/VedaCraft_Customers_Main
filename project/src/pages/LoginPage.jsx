@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
-    'https://veda-craft.onrender.com/api/v1';
+    'http://localhost:5000/api/v1';
 export default function LoginPage() {
     const { t } = useTranslation();
     const [method, setMethod] = useState('mobile');

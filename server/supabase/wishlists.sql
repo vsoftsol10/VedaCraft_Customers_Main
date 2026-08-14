@@ -35,4 +35,5 @@ TO authenticated
 USING (auth.uid() = user_id);
 
 GRANT SELECT, INSERT, DELETE ON public.wishlists TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE public.wishlists_id_seq TO authenticated;
 GRANT ALL ON public.wishlists TO service_role;
