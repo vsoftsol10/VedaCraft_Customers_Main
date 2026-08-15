@@ -91,9 +91,9 @@ export default function Footer() {
             <a href="https://www.facebook.com/profile.php?id=61589888365971&rdid=NomPOeMlAkGHZe8v&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1ZVSsk4Ch5%2F#" aria-label="Facebook" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">
               <Facebook className="w-4 h-4"/>
             </a>
-            <a href="#" aria-label="YouTube" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">
+            {/* <a href="#" aria-label="YouTube" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">
               <Youtube className="w-4 h-4"/>
-            </a>
+            </a> */}
           </div>
         </div>
       </div>

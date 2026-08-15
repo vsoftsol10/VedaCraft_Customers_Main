@@ -13,7 +13,7 @@ import AddAddressDrawer from '../components/Checkout/AddAddressDrawer';
 import { supabase } from '../lib/supabase';
 import { checkDeliveryState } from '../services/deliveryApi';
 const STEP_KEYS = ['address', 'summary', 'payment'];
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://veda-craft.onrender.com/api/v1';
 function loadScript(src) {
     return new Promise((resolve) => {
         const script = document.createElement('script');

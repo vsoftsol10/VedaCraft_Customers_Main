@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
-    'http://localhost:5000/api/v1'
+    'https://veda-craft.onrender.comrender.com/api/v1'
 
 export const checkDeliveryState = async (stateName) => {
     if (!stateName)

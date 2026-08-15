@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Mail, Phone, ChevronRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import logoImg from '../assets/products/WhatsApp_Image_2026-06-19_at_11.31.57_AM.jpeg';
+import logoImg from '../assets/products/Vsoft Logo black (1).png';
 import bgImg from '../assets/products/login_eco_bg.png'; // New eco products collage
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
-    'http://localhost:5000/api/v1';
+    'https://veda-craft.onrender.com/api/v1';
 export default function LoginPage() {
     const { t } = useTranslation();
     const [method, setMethod] = useState('mobile');

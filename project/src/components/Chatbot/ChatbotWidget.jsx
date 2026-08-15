@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
-import { Loader2, Send, X } from 'lucide-react';
-import logoImg from '../../assets/products/WhatsApp_Image_2026-06-19_at_11.31.57_AM.jpeg';
+import { Loader2, MessageCircle, Send, X } from 'lucide-react';
 import { sendChatMessage } from '../../services/chatApi';
 const initialMessages = [
     {
@@ -60,12 +59,12 @@ export default function ChatbotWidget() {
             window.setTimeout(() => inputRef.current?.focus(), 100);
         }
     };
-    return (<div className="fixed bottom-4 right-4 z-[70] sm:bottom-6 sm:right-6">
+    return (<div className="fixed bottom-28 right-4 z-[70] sm:bottom-28 sm:right-6">
       {isOpen && (<section className="mb-3 flex h-[min(520px,calc(100vh-120px))] w-[calc(100vw-32px)] max-w-sm flex-col overflow-hidden rounded-2xl border border-green-100 bg-white shadow-2xl">
           <div className="flex items-center justify-between bg-green-700 px-4 py-3 text-white">
             <div className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
-                <img src={logoImg} alt="Veda Craft" className="h-7 w-7 rounded-full object-cover"/>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/20">
+                <MessageCircle className="h-5 w-5"/>
               </span>
               <div>
                 <h2 className="text-sm font-semibold leading-tight">Veda Assistant</h2>
@@ -102,8 +101,10 @@ export default function ChatbotWidget() {
           </form>
         </section>)}
 
-      <button type="button" onClick={openChat} className="flex h-14 w-14 items-center justify-center rounded-full bg-green-700 text-white shadow-xl transition hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-200" aria-label="Open chat">
-        <img src={logoImg} alt="Veda Craft chat" className="h-10 w-10 rounded-full object-cover"/>
+      <button type="button" onClick={openChat} className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-green-700 text-white shadow-[0_14px_30px_rgba(21,128,61,0.35)] transition hover:-translate-y-0.5 hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-200 sm:h-16 sm:w-16" aria-label="Open chat">
+        <span className="absolute inset-1 rounded-full border border-white/25"/>
+        <MessageCircle className="h-6 w-6 transition group-hover:scale-105 sm:h-7 sm:w-7"/>
+        <span className="absolute right-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-green-700 bg-amber-300 sm:right-2 sm:top-2"/>
       </button>
     </div>);
 }
