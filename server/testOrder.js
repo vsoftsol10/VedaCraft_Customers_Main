@@ -1,6 +1,6 @@
 async function testOrder() {
   try {
-    const res = await fetch('http://localhost:5000ders/test', {
+    const res = await fetch('https://veda-craft.onrender.comders/test', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
