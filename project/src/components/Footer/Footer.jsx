@@ -1,7 +1,7 @@
 import { Phone, Mail, Instagram, Facebook, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import logoImg from '../../assets/products/WhatsApp_Image_2026-06-19_at_11.31.57_AM.jpeg';
+import logoImg from '../../assets/products/Vsoft Logo black (1).png';
 export default function Footer() {
     const { t } = useTranslation();
     return (<footer className="bg-gray-950 text-gray-300">
@@ -9,20 +9,20 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Column 1 - Brand */}
           <div className="md:col-span-2">
-            <div className="bg-white rounded-xl p-3 inline-block mb-4">
-              <img src={logoImg} alt="Vedha Craft" className="h-14 w-auto object-contain"/>
-            </div>
+           <div className="bg-white rounded-xl  inline-block mb-4">
+  <img src={logoImg} alt="Vedha Craft" className="h-16 w-auto object-contain hover:opacity-90 transition-opacity sm:h-24"/>
+</div>
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs mb-5">
               {t('footer.tagline')}
             </p>
             <div className="flex flex-col gap-2">
-              <a href="tel:+919876543210" className="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-colors">
+              <a href="tel:+919095422237" className="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-colors">
                 <Phone className="w-4 h-4 flex-shrink-0"/>
-                +91 98765 43210
+                +91 9095422237
               </a>
-              <a href="mailto:hello@vedacraft.in" className="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-colors">
+              <a href="mailto:vedaconnecttvl@gmail.com" className="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-colors">
                 <Mail className="w-4 h-4 flex-shrink-0"/>
-                hello@vedacraft.in
+                vedaconnecttvl@gmail.com
               </a>
             </div>
           </div>
@@ -85,10 +85,10 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Vedha Craft. {t('footer.allRightsReserved')}
           </p>
           <div className="flex items-center gap-4">
-            <a href="#" aria-label="Instagram" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">
+            <a href="https://www.instagram.com/vedacrafts_women_ecosellers?igsh=MWQwZ2hobTk4Z281Mw==" aria-label="Instagram" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">
               <Instagram className="w-4 h-4"/>
             </a>
-            <a href="#" aria-label="Facebook" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">
+            <a href="https://www.facebook.com/profile.php?id=61589888365971&rdid=NomPOeMlAkGHZe8v&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1ZVSsk4Ch5%2F#" aria-label="Facebook" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">
               <Facebook className="w-4 h-4"/>
             </a>
             <a href="#" aria-label="YouTube" className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all duration-200">

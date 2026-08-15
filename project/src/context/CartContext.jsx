@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { useLoginPrompt } from './LoginPromptContext';
 import * as cartApi from '../services/cartApi';
 const CartContext = createContext(undefined);
-const GUEST_CART_KEY = 'cart_guest';
-const getCartStorageKey = (user) => user?.id ? `cart_${user.id}` : GUEST_CART_KEY;
 const normalizeCartItem = (item) => {
     const id = Number(item.id);
     const price = Number(item.price);
@@ -28,16 +27,6 @@ const normalizeCartItems = (cartItems) => {
         .map(normalizeCartItem)
         .filter((item) => Boolean(item));
 };
-const parseStoredCart = (storageKey) => {
-    try {
-        const savedCart = localStorage.getItem(storageKey);
-        const parsed = savedCart ? JSON.parse(savedCart) : [];
-        return Array.isArray(parsed) ? normalizeCartItems(parsed) : [];
-    }
-    catch {
-        return [];
-    }
-};
 const mergeCartItems = (backendItems, fallbackItems) => {
     const fallbackMap = new Map(fallbackItems.map((item) => [item.id, item]));
     return normalizeCartItems(backendItems.map((item) => {
@@ -53,21 +42,21 @@ const mergeCartItems = (backendItems, fallbackItems) => {
 };
 export function CartProvider({ children }) {
     const { user, accessToken, authReady, logout } = useAuth();
-    const [cartStorageKey, setCartStorageKey] = useState(() => getCartStorageKey(user));
-    const [items, setItems] = useState(() => parseStoredCart(getCartStorageKey(user)));
+    const { showLoginPrompt } = useLoginPrompt();
+    const [items, setItems] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [buyNowItem, setBuyNowItem] = useState(null);
     useEffect(() => {
         let mounted = true;
         const loadCart = async () => {
-            const nextStorageKey = getCartStorageKey(user);
-            const storedItems = parseStoredCart(nextStorageKey);
-            if (mounted) {
-                setCartStorageKey(nextStorageKey);
-                setItems(storedItems);
-            }
             if (!authReady || !user || !accessToken) {
+                if (mounted) {
+                    setItems([]);
+                }
                 return;
+            }
+            if (mounted) {
+                setItems([]);
             }
             try {
                 const backendItems = await cartApi.getCartWithToken(accessToken);
@@ -78,7 +67,7 @@ export function CartProvider({ children }) {
             catch (error) {
                 if (error.status === 401) {
                     if (mounted)
-                        setItems(storedItems);
+                        setItems([]);
                     await logout();
                     return;
                 }
@@ -90,22 +79,12 @@ export function CartProvider({ children }) {
             mounted = false;
         };
     }, [accessToken, authReady, logout, user]);
-    useEffect(() => {
-        localStorage.setItem(cartStorageKey, JSON.stringify(items));
-    }, [items, cartStorageKey]);
     const addToCart = (newItem) => {
         if (!user || !accessToken) {
-            setItems((currentItems) => {
-                const existingItem = currentItems.find((item) => item.id === newItem.id);
-                return existingItem
-                    ? currentItems.map((item) => item.id === newItem.id
-                        ? { ...item, quantity: item.quantity + newItem.quantity }
-                        : item)
-                    : [...currentItems, newItem];
-            });
-            setIsOpen(true);
-            return;
+            showLoginPrompt('cart');
+            return false;
         }
+        const previousItems = items;
         setItems((currentItems) => {
             const existingItem = currentItems.find((item) => item.id === newItem.id);
             return existingItem
@@ -120,6 +99,7 @@ export function CartProvider({ children }) {
                 setItems((currentItems) => mergeCartItems(updated, [...currentItems, newItem]));
             }
             catch (error) {
+                setItems(previousItems);
                 if (error.status === 401) {
                     await logout();
                     return;
@@ -128,6 +108,7 @@ export function CartProvider({ children }) {
             }
         })();
         setIsOpen(true);
+        return true;
     };
     const removeFromCart = (id) => {
         const previousItems = items;

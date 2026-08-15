@@ -11,6 +11,30 @@ CREATE TABLE IF NOT EXISTS public.wishlists (
   CONSTRAINT wishlists_unique_user_product UNIQUE (user_id, product_id)
 );
 
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'wishlists_product_id_fkey'
+      AND conrelid = 'public.wishlists'::regclass
+      AND pg_get_constraintdef(oid) NOT ILIKE '%REFERENCES products(id)%'
+  ) THEN
+    ALTER TABLE public.wishlists DROP CONSTRAINT wishlists_product_id_fkey;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'wishlists_product_id_fkey'
+      AND conrelid = 'public.wishlists'::regclass
+  ) THEN
+    ALTER TABLE public.wishlists
+      ADD CONSTRAINT wishlists_product_id_fkey
+      FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_wishlists_user_created
   ON public.wishlists (user_id, created_at DESC);
 

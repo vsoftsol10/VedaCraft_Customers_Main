@@ -1,7 +1,7 @@
 import { User, ShoppingCart, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import logoImg from '../../assets/products/WhatsApp_Image_2026-06-19_at_11.31.57_AM.jpeg';
+import logoImg from '../../assets/products/Vsoft Logo black cropped.png';
 import LocationSelector from './LocationSelector';
 import SearchBar from './SearchBar';
 import { useCart } from '../../context/CartContext';
@@ -21,10 +21,9 @@ export default function Header() {
           {/* Left: Logo & Location */}
           <div className="flex items-center gap-4 md:gap-8 flex-shrink-0">
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0 block">
-              <img src={logoImg} alt="Vedha Craft" className="h-12 w-auto object-contain hover:opacity-90 transition-opacity"/>
-            </Link>
-
+           <Link to="/" className="flex h-16 w-44 flex-shrink-0 items-center sm:h-24 sm:w-60">
+  <img src={logoImg} alt="Vedha Craft" className="h-14 w-auto object-contain hover:opacity-90 transition-opacity sm:h-[4.5rem]"/>
+</Link>
             {/* Location Selector */}
             <div className="hidden md:flex flex-shrink-0">
               <LocationSelector />

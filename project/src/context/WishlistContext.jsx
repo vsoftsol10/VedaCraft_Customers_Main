@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { useLoginPrompt } from './LoginPromptContext';
 import * as wishlistApi from '../services/wishlistApi';
 
 const WishlistContext = createContext(undefined);
@@ -18,6 +19,7 @@ const dedupeProducts = (products) => {
 
 export function WishlistProvider({ children }) {
   const { user, accessToken, authReady, logout } = useAuth();
+  const { showLoginPrompt } = useLoginPrompt();
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function WishlistProvider({ children }) {
 
   const addToWishlist = async (product) => {
     if (!user || !accessToken) {
-      alert('Please log in to add items to your wishlist');
+      showLoginPrompt('wishlist');
       return false;
     }
 
@@ -83,7 +85,10 @@ export function WishlistProvider({ children }) {
         await logout();
       } else {
         console.warn('Failed to add wishlist item', err);
-        alert(err?.message || 'Failed to add item to wishlist');
+        const message = err?.message?.includes('wishlists_product_id_fkey')
+          ? 'This product is not available for wishlist yet'
+          : err?.message || 'Failed to add item to wishlist';
+        alert(message);
       }
 
       return false;
@@ -92,7 +97,7 @@ export function WishlistProvider({ children }) {
 
   const removeFromWishlist = async (productId) => {
     if (!user || !accessToken) {
-      alert('Please log in to manage your wishlist');
+      showLoginPrompt('wishlist');
       return false;
     }
 
@@ -112,7 +117,10 @@ export function WishlistProvider({ children }) {
         await logout();
       } else {
         console.warn('Failed to remove wishlist item', err);
-        alert(err?.message || 'Failed to remove item from wishlist');
+        const message = err?.message?.includes('wishlists_product_id_fkey')
+          ? 'This product is not available for wishlist yet'
+          : err?.message || 'Failed to remove item from wishlist';
+        alert(message);
       }
 
       return false;

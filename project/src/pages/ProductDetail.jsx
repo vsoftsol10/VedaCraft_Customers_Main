@@ -660,6 +660,7 @@ export default function ProductDetailsPage() {
             <div className="grid grid-cols-2 gap-4 mb-10">
               <button onClick={() => addToCart({
             id: product.id,
+            slug: product.slug,
             name: product.name,
             price: product.price,
             image: product.image,

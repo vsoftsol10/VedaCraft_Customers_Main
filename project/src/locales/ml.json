@@ -370,6 +370,13 @@
     "cancelling": "Cancelling...",
     "cancelOrder": "Cancel Order",
     "ordered": "Ordered",
+    "tracking": {
+      "processing": "Processing",
+      "packed": "Packed",
+      "shipped": "Shipped",
+      "outForDelivery": "Out for delivery",
+      "delivered": "Delivered"
+    },
     "cancelledMessage": "Order cancelled",
     "cancelledDesc": "This order has been cancelled.",
     "deliveredOn": "Delivered on {{date}}",

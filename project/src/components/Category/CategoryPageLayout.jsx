@@ -30,14 +30,16 @@ function ProductCard({ product, badgeIcon: BadgeIcon, badgeText, badgeColorClass
     const [added, setAdded] = useState(false);
     const handleAdd = (e) => {
         e.preventDefault();
-        addToCart({
+        const addedToCart = addToCart({
             id: product.id,
+            slug: product.slug,
             name: product.name,
             price: product.price,
             image: product.image,
             quantity: 1,
             rating: product.rating
         });
+        if (!addedToCart) return;
         setAdded(true);
         setTimeout(() => setAdded(false), 1200);
     };

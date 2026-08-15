@@ -55,6 +55,30 @@ CREATE TABLE IF NOT EXISTS public.cart_items (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'cart_items_product_id_fkey'
+      AND conrelid = 'public.cart_items'::regclass
+      AND pg_get_constraintdef(oid) NOT ILIKE '%REFERENCES products(id)%'
+  ) THEN
+    ALTER TABLE public.cart_items DROP CONSTRAINT cart_items_product_id_fkey;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'cart_items_product_id_fkey'
+      AND conrelid = 'public.cart_items'::regclass
+  ) THEN
+    ALTER TABLE public.cart_items
+      ADD CONSTRAINT cart_items_product_id_fkey
+      FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
 ALTER TABLE public.cart_items
   ADD COLUMN IF NOT EXISTS product_name TEXT,
   ADD COLUMN IF NOT EXISTS product_price NUMERIC(10, 2),

@@ -1,6 +1,6 @@
 {
-  "message": "fetch failed",
-  "stack": "AuthRetryableFetchError: fetch failed\n    at _handleRequest (C:\\Users\\acer\\Desktop\\VedaCraft_Customers_Main\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:124:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async _request (C:\\Users\\acer\\Desktop\\VedaCraft_Customers_Main\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:109:18)\n    at async GoTrueAdminApi.generateLink (C:\\Users\\acer\\Desktop\\VedaCraft_Customers_Main\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\GoTrueAdminApi.js:292:20)\n    at async file:///C:/Users/acer/Desktop/VedaCraft_Customers_Main/server/src/routes/auth.js:56:29",
-  "path": "/api/v1/auth/email-otp",
+  "message": "Email link is invalid or has expired",
+  "stack": "AuthApiError: Email link is invalid or has expired\n    at handleError (C:\\Users\\acer\\Desktop\\VedaCraft_Customers_Main\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:84:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async _handleRequest (C:\\Users\\acer\\Desktop\\VedaCraft_Customers_Main\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:127:9)\n    at async _request (C:\\Users\\acer\\Desktop\\VedaCraft_Customers_Main\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\lib\\fetch.js:109:18)\n    at async SupabaseAuthClient.verifyOtp (C:\\Users\\acer\\Desktop\\VedaCraft_Customers_Main\\server\\node_modules\\@supabase\\auth-js\\dist\\main\\GoTrueClient.js:1973:37)\n    at async file:///C:/Users/acer/Desktop/VedaCraft_Customers_Main/server/src/routes/auth.js:122:29",
+  "path": "/api/v1/auth/verify-email-otp",
   "method": "POST"
 }

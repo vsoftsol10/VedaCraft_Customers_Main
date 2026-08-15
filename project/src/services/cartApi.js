@@ -38,6 +38,11 @@ export const addToCart = async (item, token) => {
         method: 'POST',
         body: JSON.stringify({
             id: item.id,
+            slug: item.slug,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            rating: item.rating,
             quantity: item.quantity,
         }),
     }, token);

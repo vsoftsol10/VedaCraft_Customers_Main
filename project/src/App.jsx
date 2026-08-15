@@ -29,13 +29,15 @@ import ProfileCompletion from './pages/ProfileCompletion';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider } from './context/AuthContext';
+import { LoginPromptProvider } from './context/LoginPromptContext';
 import CartDrawer from './components/Cart/CartDrawer';
 import ChatbotWidget from './components/Chatbot/ChatbotWidget';
 function App() {
     return (<AuthProvider>
-      <WishlistProvider>
-        <CartProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <LoginPromptProvider>
+          <WishlistProvider>
+            <CartProvider>
           <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
             <Navbar />
@@ -80,9 +82,10 @@ function App() {
             <CartDrawer />
             <ChatbotWidget />
           </div>
-        </BrowserRouter>
-        </CartProvider>
-      </WishlistProvider>
+            </CartProvider>
+          </WishlistProvider>
+        </LoginPromptProvider>
+      </BrowserRouter>
     </AuthProvider>);
 }
 export default App;

@@ -42,6 +42,76 @@ const getItemSnapshot = (item) => {
   };
 };
 
+const toProductMap = (products) => {
+  return new Map(
+    (products || []).map((product) => [
+      Number(product.id),
+      {
+        id: Number(product.id),
+        name: product.name,
+        price: product.discount_price ?? product.price,
+        image_url: product.image_url,
+        rating: product.rating,
+      },
+    ])
+  );
+};
+
+const getProductsByIds = async (productIds, token) => {
+  const ids = [...new Set(productIds.map(Number).filter((id) => Number.isFinite(id)))];
+  if (!ids.length) return new Map();
+
+  const supabase = createScopedClient(token);
+  const { data, error } = await supabase
+    .from('products')
+    .select(CART_PRODUCT_COLUMNS)
+    .in('id', ids)
+    .eq('is_active', true);
+
+  if (error) throw new AppError(error.message, 500);
+
+  return toProductMap(data);
+};
+
+const findActiveProductId = async (filters, token) => {
+  const supabase = createScopedClient(token);
+  let query = supabase
+    .from('products')
+    .select('id')
+    .eq('is_active', true)
+    .limit(1);
+
+  Object.entries(filters).forEach(([key, value]) => {
+    query = query.eq(key, value);
+  });
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) throw new AppError(error.message, 500);
+  return data?.id ? Number(data.id) : null;
+};
+
+const resolveProductId = async (item, token) => {
+  const requestedId = Number(item?.id ?? item?.product_id);
+
+  if (Number.isFinite(requestedId) && requestedId > 0) {
+    const activeProductId = await findActiveProductId({ id: requestedId }, token);
+    if (activeProductId) return activeProductId;
+  }
+
+  const slug = String(item?.slug || '').trim();
+  if (slug) {
+    const activeProductId = await findActiveProductId({ slug }, token);
+    if (activeProductId) return activeProductId;
+  }
+
+  if (!Number.isFinite(requestedId) || requestedId <= 0) {
+    throw new AppError('Product id is required', 400);
+  }
+
+  throw new AppError('Product not found', 404);
+};
+
 const getOrCreateCart = async (userId, token) => {
   const supabase = createScopedClient(token);
 
@@ -64,8 +134,8 @@ const getOrCreateCart = async (userId, token) => {
   return created.id;
 };
 
-const mapCartRow = (row) => {
-  const product = row.product || {};
+const mapCartRow = (row, productMap = new Map()) => {
+  const product = productMap.get(row.product_id) || {};
   const price = product.discount_price ?? product.price ?? row.product_price ?? 0;
 
   return {
@@ -104,19 +174,20 @@ export const getCart = async (userId, token) => {
       product_image,
       product_rating,
       quantity,
-      created_at,
-      product:products (${CART_PRODUCT_COLUMNS})
+      created_at
     `)
     .eq('cart_id', cart.id)
     .order('created_at', { ascending: true });
 
   if (error) throw new AppError(error.message, 500);
 
-  return (data || []).map(mapCartRow).filter((item) => item.id);
+  const productMap = await getProductsByIds((data || []).map((row) => row.product_id), token);
+
+  return (data || []).map((row) => mapCartRow(row, productMap)).filter((item) => item.id);
 };
 
 export const addItem = async (userId, item, token) => {
-  const productId = normalizeProductId(item?.id ?? item?.product_id);
+  const productId = await resolveProductId(item, token);
   const quantity = normalizeQuantity(item?.quantity, 1);
   const snapshot = getItemSnapshot(item);
   const supabase = createScopedClient(token);

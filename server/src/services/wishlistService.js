@@ -47,6 +47,45 @@ const getProductsByIds = async (productIds, token) => {
   return (data || []).map(toProductDto).filter(Boolean);
 };
 
+const findActiveProductId = async (filters, token) => {
+  const supabase = createScopedClient(token);
+  let query = supabase
+    .from('products')
+    .select('id')
+    .eq('is_active', true)
+    .limit(1);
+
+  Object.entries(filters).forEach(([key, value]) => {
+    query = query.eq(key, value);
+  });
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) throw new AppError(error.message, 500);
+  return data?.id ? Number(data.id) : null;
+};
+
+const resolveProductId = async (product, token) => {
+  const requestedId = Number(product?.id ?? product?.product_id);
+
+  if (Number.isFinite(requestedId) && requestedId > 0) {
+    const activeProductId = await findActiveProductId({ id: requestedId }, token);
+    if (activeProductId) return activeProductId;
+  }
+
+  const slug = String(product?.slug || '').trim();
+  if (slug) {
+    const activeProductId = await findActiveProductId({ slug }, token);
+    if (activeProductId) return activeProductId;
+  }
+
+  if (!Number.isFinite(requestedId) || requestedId <= 0) {
+    throw new AppError('Product id is required', 400);
+  }
+
+  throw new AppError('Product not found', 404);
+};
+
 const buildWishlistResponse = async (rows, token) => {
   if (!rows?.length) return [];
 
@@ -79,11 +118,7 @@ export const getWishlist = async (userId, token) => {
 };
 
 export const toggleItem = async (userId, product, token) => {
-  const productId = Number(product?.id ?? product?.product_id);
-
-  if (!Number.isFinite(productId) || productId <= 0) {
-    throw new AppError('Product id is required', 400);
-  }
+  const productId = await resolveProductId(product, token);
 
   const supabase = createScopedClient(token);
 
