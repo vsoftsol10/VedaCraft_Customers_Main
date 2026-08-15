@@ -21,6 +21,7 @@ const app = express();
 // ─── Security Middleware ──────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // ─── Request Parsing ─────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
