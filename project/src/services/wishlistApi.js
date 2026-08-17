@@ -3,7 +3,7 @@ import { mapApiProductToProduct } from '../types/product';
 import { allProducts } from '../data/allProducts';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
-    'https://veda-craft.onrender.com/api/v1'
+    'https://vedacraft-customers-main.onrender.com/api/v1'
 const getToken = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token ?? null;

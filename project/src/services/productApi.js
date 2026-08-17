@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
-    'https://veda-craft.onrender.com/api/v1'
+    'https://vedacraft-customers-main.onrender.com/api/v1'
 const toQueryString = (query = {}) => {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => {
