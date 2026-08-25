@@ -549,6 +549,12 @@ export default function ProductDetailsPage() {
         d.setDate(d.getDate() + 3);
         return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
     })();
+    useEffect(() => {
+        if (!product)
+            return;
+        const stockQuantity = Number(product.quantity ?? product.stock ?? 0);
+        setQuantity((currentQuantity) => stockQuantity > 0 ? Math.min(currentQuantity, stockQuantity) : 1);
+    }, [product?.id, product?.quantity, product?.stock]);
     if (loading) {
         return (<div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800">
         <p className="text-gray-500 font-medium">Loading product...</p>
@@ -567,6 +573,9 @@ export default function ProductDetailsPage() {
     }
     const productImages = product.images?.filter(Boolean) || [];
     const primaryImage = productImages[0] || product.image;
+    const displayPrice = product.discountPrice || product.price;
+    const stockQuantity = Number(product.quantity ?? product.stock ?? 0);
+    const isOutOfStock = stockQuantity <= 0;
     return (<div className="bg-white min-h-screen pt-4 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -580,17 +589,20 @@ export default function ProductDetailsPage() {
         </nav>
 
         {/* Main Product Area */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 mb-12">
           
           {/* Image Gallery */}
-          <div className="flex gap-4">
-            <div className="flex flex-col gap-2 w-20 flex-shrink-0">
+          <div className="flex flex-col-reverse gap-4 sm:flex-row">
+            <div className="flex flex-row gap-2 overflow-x-auto pb-1 sm:w-20 sm:flex-col sm:overflow-visible sm:pb-0 flex-shrink-0 scrollbar-hide">
               {[1, 2, 3, 4].map((item) => (<div key={item} className="bg-white border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:border-green-500">
-                   <img src={productImages[item - 1] || primaryImage} alt="thumbnail" className="w-full h-auto object-cover"/>
+                   <img src={productImages[item - 1] || primaryImage} alt="thumbnail" className="h-16 w-16 object-cover sm:h-auto sm:w-full"/>
                 </div>))}
             </div>
             <div className="flex-1 flex items-start justify-center relative group">
                <img src={primaryImage} alt={t(`productsData.${product.name}`, product.name)} className="w-full h-auto rounded-xl object-contain shadow-sm border border-gray-100"/>
+               {isOutOfStock && (<div className="absolute left-4 top-4 rounded bg-red-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm">
+                 Out of stock
+               </div>)}
                
                {/* Floating Action Group */}
                <div className="absolute top-4 right-4 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -605,38 +617,41 @@ export default function ProductDetailsPage() {
           {/* Product Info */}
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t(`productsData.${product.name}`, product.name)}</h1>
-            <p className="text-sm text-gray-500 mb-4">{t('product.biodegradable')}</p>
+            <p className="text-sm text-gray-500 mb-4">
+              {product.shortDescription || product.description || t('product.biodegradable')}
+            </p>
 
             {/* Rating */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex flex-wrap items-center gap-3 mb-6">
               <div className="flex items-center bg-green-700 text-white px-2 py-0.5 rounded text-sm font-medium">
                 {product.rating} <Star className="w-3.5 h-3.5 fill-white ml-1"/>
               </div>
-              <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((star) => (<Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400"/>))}
-              </div>
+             
               <span className="text-sm text-blue-600">(1,248 {t('product.reviews')})</span>
             </div>
 
             {/* Price */}
-            <div className="flex items-end gap-3 mb-6">
-              <span className="text-3xl font-bold text-gray-900">&#8377; {product.price}</span>
-              <span className="text-lg text-gray-400 line-through mb-1">&#8377; {Math.round(product.price * 1.5)}</span>
-              <span className="text-sm text-green-600 font-semibold mb-1.5">50% {t('product.off')}</span>
+            <div className="flex flex-wrap items-end gap-3 mb-6">
+              <span className="text-3xl font-bold text-gray-900">&#8377; {displayPrice}</span>
+              {product.discountPrice && (<span className="text-lg text-gray-400 line-through mb-1">&#8377; {product.price}</span>)}
+              {product.offer && (<span className="text-sm text-green-600 font-semibold mb-1.5">{product.offer}</span>)}
             </div>
+            <p className={`mb-4 text-sm font-semibold ${isOutOfStock ? 'text-red-600' : 'text-green-700'}`}>
+              {isOutOfStock ? 'Out of stock' : `${stockQuantity} in stock`}
+            </p>
 
-            {/* Quantity */}
-            <div className="flex items-center border border-gray-300 rounded-md w-fit mb-8">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors">
+            {/* Quantity
+            <div className={`flex items-center border rounded-md w-fit mb-8 ${isOutOfStock ? 'border-gray-200 bg-gray-100 text-gray-400' : 'border-gray-300'}`}>
+              <button disabled={isOutOfStock} onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors disabled:cursor-not-allowed disabled:text-gray-400">
                 <Minus className="w-4 h-4"/>
               </button>
               <span className="px-4 py-1.5 border-x border-gray-300 font-medium text-gray-800 min-w-[3rem] text-center">
                 {quantity}
               </span>
-              <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors">
+              <button disabled={isOutOfStock || quantity >= stockQuantity} onClick={() => setQuantity(Math.min(stockQuantity, quantity + 1))} className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors disabled:cursor-not-allowed disabled:text-gray-400">
                 <Plus className="w-4 h-4"/>
               </button>
-            </div>
+            </div> */}
 
             {/* Size Recommendation for Fashion */}
             {product.category_slug === 'fashion' && ['Cotton Apparel', 'Linen Wear'].includes(product.category) && (<div className="mb-8 bg-[#fdf8f4] border border-[#f9eadf] rounded-xl p-4 flex items-start gap-4">
@@ -657,32 +672,42 @@ export default function ProductDetailsPage() {
               </div>)}
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-4 mb-10">
-              <button onClick={() => addToCart({
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+              <button disabled={isOutOfStock} onClick={() => {
+            if (isOutOfStock)
+                return;
+            addToCart({
             id: product.id,
             slug: product.slug,
             name: product.name,
-            price: product.price,
+            category: product.category,
+            price: displayPrice,
             image: product.image,
             quantity: quantity,
+            stock: stockQuantity,
             rating: product.rating
-        })} className="bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-md transition-colors shadow-sm">
-                {t('product.addToCart')}
+        });
+        }} className="bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-md transition-colors shadow-sm disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none">
+                {isOutOfStock ? 'Out of stock' : t('product.addToCart')}
               </button>
-              <button onClick={() => {
+              <button disabled={isOutOfStock} onClick={() => {
+            if (isOutOfStock)
+                return;
             navigate('/checkout', {
                 state: {
                     buyNowItem: {
                         id: product.id,
                         name: product.name,
-                        price: product.price,
+                        category: product.category,
+                        price: displayPrice,
                         image: product.image,
                         quantity: quantity,
+                        stock: stockQuantity,
                         rating: product.rating,
                     }
                 }
             });
-        }} className="bg-amber-400 hover:bg-amber-500 text-white font-semibold py-3 px-6 rounded-md transition-colors shadow-sm">
+        }} className="bg-amber-400 hover:bg-amber-500 text-white font-semibold py-3 px-6 rounded-md transition-colors shadow-sm disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none">
                 {t('product.buyNow')}
               </button>
             </div>
@@ -692,13 +717,13 @@ export default function ProductDetailsPage() {
               <h3 className="font-semibold text-gray-900 mb-2">{t('product.deliveryLocation')}</h3>
               <p className="text-sm text-gray-600 mb-4">{t('product.deliveryLocationDesc')}</p>
               {/* Pincode Input Row */}
-              <div className="flex">
+              <div className="flex flex-col sm:flex-row">
                 <input type="text" placeholder={t('product.enterPincode')} value={pincode} maxLength={6} onChange={(e) => {
             setPincode(e.target.value);
             if (deliveryChecked)
                 setDeliveryChecked(false);
-        }} onKeyDown={(e) => e.key === 'Enter' && handleApplyPincode()} className="border border-gray-300 rounded-l-md px-4 py-2.5 flex-1 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"/>
-                <button onClick={handleApplyPincode} className="bg-gray-50 border border-l-0 border-gray-300 text-gray-700 font-medium px-6 py-2.5 rounded-r-md hover:bg-gray-100 transition-colors">
+        }} onKeyDown={(e) => e.key === 'Enter' && handleApplyPincode()} className="min-w-0 border border-gray-300 rounded-t-md sm:rounded-l-md sm:rounded-tr-none px-4 py-2.5 flex-1 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"/>
+                <button onClick={handleApplyPincode} className="bg-gray-50 border border-t-0 sm:border-t sm:border-l-0 border-gray-300 text-gray-700 font-medium px-6 py-2.5 rounded-b-md sm:rounded-r-md sm:rounded-bl-none hover:bg-gray-100 transition-colors">
                   {t('product.apply')}
                 </button>
               </div>
@@ -774,14 +799,14 @@ export default function ProductDetailsPage() {
 
       {/* Recently Viewed Products */}
       {recentlyViewed.length > 0 && (<div className="bg-white pt-8 pb-4 border-t border-gray-100">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-0">
             <ProductSection title="Recently Viewed" products={recentlyViewed}/>
           </div>
         </div>)}
 
       {/* Similar Products */}
       {similarProducts.length > 0 && (<div className="bg-gray-50 pt-8 pb-4">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-0">
             <ProductSection title={t('product.similarProducts')} products={similarProducts}/>
           </div>
         </div>)}

@@ -12,7 +12,25 @@ const initialProfileData = {
     dateOfBirth: '',
     location: '',
 };
-function FormField({ label, value, onChange, disabled, type = 'text', placeholder, }) {
+
+const genderOptions = [
+    { value: 'Men', label: 'Men' },
+    { value: 'Women', label: 'Women' },
+];
+
+function FormField({ label, value, onChange, disabled, type = 'text', placeholder, options }) {
+    if (type === 'select') {
+        return (<div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">{label}</label>
+          <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-colors outline-none
+              ${disabled
+                ? 'bg-gray-50 border-gray-200 text-gray-700 cursor-not-allowed'
+                : 'bg-white border-[#c8b97a] text-gray-900 focus:ring-2 focus:ring-[#2d6a2d]/30 focus:border-[#2d6a2d]'}`}>
+            <option value="">{placeholder ?? label}</option>
+            {options.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+          </select>
+        </div>);
+    }
     return (<div className="flex flex-col gap-1.5">
       <label className="text-sm font-medium text-gray-700">{label}</label>
       <input type={type} value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} placeholder={placeholder ?? label} className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-colors outline-none
@@ -59,40 +77,49 @@ export default function MyProfile() {
         setIsEditing(true);
     };
     const handleSave = async () => {
-        if (!user) {
-            setFormData({ ...draft });
-            setIsEditing(false);
-            return;
-        }
-        try {
-            const { error } = await supabase.from('profiles').upsert({
-                id: user.id,
-                full_name: draft.fullName,
-                phone_number: draft.phone,
-                gender: draft.gender,
-                dob: draft.dateOfBirth,
-                avatar_url: profilePhoto,
-                updated_at: new Date().toISOString(),
-            });
-            if (error)
-                throw error;
-            const updatedUser = {
-                ...user,
-                name: draft.fullName,
-                phone_number: draft.phone,
-                gender: draft.gender,
-                dob: draft.dateOfBirth,
-                avatar_url: profilePhoto || user.avatar_url || '',
-            };
-            localStorage.setItem('vc_user', JSON.stringify(updatedUser));
-            setFormData({ ...draft });
-            setIsEditing(false);
-        }
-        catch (err) {
-            console.error('Error updating profile', err);
-            setIsEditing(false);
-        }
-    };
+  if (!user?.id) {
+    alert('User is not authenticated');
+    return;
+  }
+
+  const profileData = {
+    id: user.id,
+    full_name: draft.fullName,
+    phone_number: draft.phone,
+    gender: draft.gender,
+    dob: draft.dateOfBirth || null,
+    avatar_url: profilePhoto,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(profileData, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Profile save error:', error);
+    alert(error.message);
+    return;
+  }
+
+  console.log('Profile saved:', data);
+
+  setFormData({ ...draft });
+  setIsEditing(false);
+
+  const savedUser = {
+    ...user,
+    name: draft.fullName,
+    phone_number: draft.phone,
+    gender: draft.gender,
+    dob: draft.dateOfBirth,
+    avatar_url: profilePhoto || user.avatar_url || '',
+  };
+
+  localStorage.setItem('vc_user', JSON.stringify(savedUser));
+};
     const handleAvatarUpload = async (file) => {
         if (!user)
             return;
@@ -213,7 +240,7 @@ export default function MyProfile() {
           <FormField label={t('profile.fullName')} value={draft.fullName} onChange={update('fullName')} disabled={!isEditing}/>
           <FormField label={t('profile.email')} value={draft.email} onChange={update('email')} disabled={!isEditing} type="email"/>
           <FormField label={t('profile.phone')} value={draft.phone} onChange={update('phone')} disabled={!isEditing} type="tel"/>
-          <FormField label={t('profile.gender')} value={draft.gender} onChange={update('gender')} disabled={!isEditing}/>
+          <FormField label={t('profile.gender')} value={draft.gender} onChange={update('gender')} disabled={!isEditing} type="select" options={genderOptions}/>
           <FormField label={t('profile.dateOfBirth')} value={draft.dateOfBirth} onChange={update('dateOfBirth')} disabled={!isEditing} type="date"/>
           
         </div>

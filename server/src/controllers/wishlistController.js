@@ -23,7 +23,7 @@ export const toggleWishlistItem = async (req, res) => {
 
 export const removeWishlistItem = async (req, res) => {
   try {
-    const wishlist = await wishlistService.removeItem(req.user.id, Number(req.params.id), req.accessToken);
+    const wishlist = await wishlistService.removeItem(req.user.id, req.params.id, req.accessToken);
     return sendSuccess(res, wishlist, 'Item removed from wishlist');
   } catch (error) {
     const statusCode = error instanceof AppError ? error.statusCode : 500;

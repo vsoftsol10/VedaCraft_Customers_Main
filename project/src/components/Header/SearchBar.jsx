@@ -209,10 +209,10 @@ export default function SearchBar() {
     };
     const showRecentSearches = isDropdownOpen && query.trim() === '' && user && recentSearches.length > 0;
     const showProductResults = isDropdownOpen && query.trim() !== '';
-    return (<div className="flex-1 max-w-2xl relative" ref={dropdownRef}>
+    return (<div className="order-3 w-full min-w-0 flex-1 md:order-none md:w-auto md:max-w-2xl relative" ref={dropdownRef}>
       <div className="flex items-center bg-white border border-gray-300 rounded-full px-4 py-2 shadow-sm hover:border-green-400 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-100 transition-all">
         <Search className="w-4 h-4 text-gray-400 flex-shrink-0 mr-2"/>
-        <input type="text" value={query} onChange={handleInputChange} onKeyDown={handleKeyDown} onFocus={handleFocus} placeholder={t('search.placeholder')} className="flex-1 outline-none text-sm text-gray-700 bg-transparent placeholder-gray-400"/>
+        <input type="text" value={query} onChange={handleInputChange} onKeyDown={handleKeyDown} onFocus={handleFocus} placeholder={t('search.placeholder')} className="min-w-0 flex-1 outline-none text-sm text-gray-700 bg-transparent placeholder-gray-400"/>
 
         {/* Voice Search Microphone Button */}
         <button onClick={toggleVoiceSearch} className={`relative flex-shrink-0 ml-2 p-1.5 rounded-full transition-all duration-300 ${voiceState === 'listening'
@@ -226,13 +226,13 @@ export default function SearchBar() {
       </div>
 
       {/* Floating Status & Error Banner */}
-      {(voiceState === 'listening' || voiceState === 'processing' || voiceState === 'error') && (<div className={`absolute top-full mt-2 w-full px-4 py-3 rounded-lg shadow-lg border text-sm z-50 flex items-center gap-2 transition-all ${voiceState === 'error'
+      {(voiceState === 'listening' || voiceState === 'processing' || voiceState === 'error') && (<div className={`absolute top-full mt-2 w-full px-4 py-3 rounded-lg shadow-lg border text-sm z-50 flex flex-wrap items-center gap-2 transition-all ${voiceState === 'error'
                 ? 'bg-red-50 border-red-200 text-red-700'
                 : 'bg-green-50 border-green-200 text-green-800'}`}>
           {voiceState === 'listening' && (<>
               <div className="w-2.5 h-2.5 bg-red-600 rounded-full animate-pulse flex-shrink-0"/>
               <span className="font-semibold">{t('voiceSearch.listening')}</span>
-              <span className="text-xs text-green-700/80 bg-green-100/50 px-2 py-0.5 rounded-full border border-green-200 ml-auto">
+              <span className="text-xs text-green-700/80 bg-green-100/50 px-2 py-0.5 rounded-full border border-green-200 sm:ml-auto">
                 {speechLocales[i18n.resolvedLanguage || i18n.language || 'en'] || 'en-IN'}
               </span>
             </>)}
@@ -272,10 +272,10 @@ export default function SearchBar() {
                   <img src={product.image} alt={t(`productsData.${product.name}`, product.name)} className="w-12 h-12 object-cover object-top rounded-md border border-gray-200"/>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{t(`productsData.${product.name}`, product.name)}</p>
-                    <p className="text-xs text-gray-500 flex gap-2">
-                      <span>{t(`productsData.${product.mainCategory}`, product.mainCategory)}</span>
+                    <p className="text-xs text-gray-500 flex min-w-0 gap-2">
+                      <span className="truncate">{t(`productsData.${product.mainCategory}`, product.mainCategory)}</span>
                       <span>•</span>
-                      <span>{t(`productsData.${product.category}`, product.category)}</span>
+                      <span className="truncate">{t(`productsData.${product.category}`, product.category)}</span>
                     </p>
                   </div>
 

@@ -6,34 +6,44 @@
 CREATE TABLE IF NOT EXISTS public.wishlists (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  product_id BIGINT NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  product_id TEXT NOT NULL,
+  product_slug TEXT,
+  product_name TEXT,
+  product_category TEXT,
+  product_price NUMERIC(10, 2),
+  product_image TEXT,
+  product_rating NUMERIC(3, 2),
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT wishlists_unique_user_product UNIQUE (user_id, product_id)
 );
 
 DO $$
+DECLARE
+  current_product_id_type TEXT;
 BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM pg_constraint
-    WHERE conname = 'wishlists_product_id_fkey'
-      AND conrelid = 'public.wishlists'::regclass
-      AND pg_get_constraintdef(oid) NOT ILIKE '%REFERENCES products(id)%'
-  ) THEN
-    ALTER TABLE public.wishlists DROP CONSTRAINT wishlists_product_id_fkey;
-  END IF;
+  SELECT data_type INTO current_product_id_type
+  FROM information_schema.columns
+  WHERE table_schema = 'public'
+    AND table_name = 'wishlists'
+    AND column_name = 'product_id';
 
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_constraint
-    WHERE conname = 'wishlists_product_id_fkey'
-      AND conrelid = 'public.wishlists'::regclass
-  ) THEN
+  ALTER TABLE public.wishlists
+    DROP CONSTRAINT IF EXISTS wishlists_product_id_fkey;
+
+  IF current_product_id_type IS NOT NULL
+     AND current_product_id_type <> 'text' THEN
     ALTER TABLE public.wishlists
-      ADD CONSTRAINT wishlists_product_id_fkey
-      FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+      ALTER COLUMN product_id TYPE TEXT USING product_id::text;
   END IF;
 END $$;
+
+ALTER TABLE public.wishlists
+  ADD COLUMN IF NOT EXISTS product_slug TEXT,
+  ADD COLUMN IF NOT EXISTS product_name TEXT,
+  ADD COLUMN IF NOT EXISTS product_category TEXT,
+  ADD COLUMN IF NOT EXISTS product_price NUMERIC(10, 2),
+  ADD COLUMN IF NOT EXISTS product_image TEXT,
+  ADD COLUMN IF NOT EXISTS product_rating NUMERIC(3, 2);
 
 CREATE INDEX IF NOT EXISTS idx_wishlists_user_created
   ON public.wishlists (user_id, created_at DESC);

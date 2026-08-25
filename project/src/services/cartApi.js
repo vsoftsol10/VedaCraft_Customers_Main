@@ -34,12 +34,14 @@ export const getCartWithToken = async (token) => {
     return requestCart('', { method: 'GET' }, token);
 };
 export const addToCart = async (item, token) => {
+    const productId = item.product_id ?? item.id;
     return requestCart('', {
         method: 'POST',
         body: JSON.stringify({
-            id: item.id,
+            product_id: String(productId),
             slug: item.slug,
             name: item.name,
+            category: item.category,
             price: item.price,
             image: item.image,
             rating: item.rating,

@@ -1,5 +1,6 @@
 {
   "nav": {
+    "home":"Home",
     "eco": "Eco",
     "wellness": "Wellness",
     "food": "Food",
@@ -17,6 +18,7 @@
     "changeLanguage": "Change Language",
     "signedInAs": "Signed in as",
     "myProfile": "My Profile",
+    "notification": "Notifications",
     "orders": "Orders",
     "logout": "Logout"
   },

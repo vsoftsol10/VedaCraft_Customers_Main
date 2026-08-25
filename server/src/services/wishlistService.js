@@ -1,125 +1,79 @@
 import { createScopedClient } from '../config/supabase.js';
 import { AppError } from '../utils/apiResponse.js';
 
-const PRODUCT_COLUMNS = 'id, name, slug, description, price, discount_price, stock, rating, total_reviews, is_featured, is_active, created_at, updated_at, image_url';
+const normalizeProductId = (value) => {
+  const productId = String(value ?? '').trim();
 
-const toProductDto = (product) => {
-  if (!product) return null;
-
-  const imageUrl = product.image_url || product.image || '';
-  const images = Array.isArray(product.images)
-    ? product.images
-    : imageUrl
-    ? [imageUrl]
-    : [];
-
-  return {
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    description: product.description,
-    price: Number(product.price || 0),
-    discount_price: product.discount_price === null ? null : Number(product.discount_price),
-    stock: product.stock,
-    rating: Number(product.rating || 0),
-    total_reviews: product.total_reviews,
-    is_featured: product.is_featured,
-    is_active: product.is_active,
-    created_at: product.created_at,
-    updated_at: product.updated_at,
-    image: imageUrl,
-    images,
-  };
-};
-
-const getProductsByIds = async (productIds, token) => {
-  if (!productIds.length) return [];
-
-  const supabase = createScopedClient(token);
-  const { data, error } = await supabase
-    .from('products')
-    .select(PRODUCT_COLUMNS)
-    .in('id', productIds)
-    .eq('is_active', true);
-
-  if (error) throw new AppError(error.message, 500);
-
-  return (data || []).map(toProductDto).filter(Boolean);
-};
-
-const findActiveProductId = async (filters, token) => {
-  const supabase = createScopedClient(token);
-  let query = supabase
-    .from('products')
-    .select('id')
-    .eq('is_active', true)
-    .limit(1);
-
-  Object.entries(filters).forEach(([key, value]) => {
-    query = query.eq(key, value);
-  });
-
-  const { data, error } = await query.maybeSingle();
-
-  if (error) throw new AppError(error.message, 500);
-  return data?.id ? Number(data.id) : null;
-};
-
-const resolveProductId = async (product, token) => {
-  const requestedId = Number(product?.id ?? product?.product_id);
-
-  if (Number.isFinite(requestedId) && requestedId > 0) {
-    const activeProductId = await findActiveProductId({ id: requestedId }, token);
-    if (activeProductId) return activeProductId;
-  }
-
-  const slug = String(product?.slug || '').trim();
-  if (slug) {
-    const activeProductId = await findActiveProductId({ slug }, token);
-    if (activeProductId) return activeProductId;
-  }
-
-  if (!Number.isFinite(requestedId) || requestedId <= 0) {
+  if (!productId) {
     throw new AppError('Product id is required', 400);
   }
 
-  throw new AppError('Product not found', 404);
+  return productId;
 };
 
-const buildWishlistResponse = async (rows, token) => {
-  if (!rows?.length) return [];
+const getProductSnapshot = (product) => {
+  const price = Number(product?.price);
+  const rating = Number(product?.rating);
 
-  const productIds = [...new Set(rows.map((row) => row.product_id).filter(Boolean))];
-  const products = await getProductsByIds(productIds, token);
-  const productMap = new Map(products.map((product) => [product.id, product]));
+  return {
+    product_slug: product?.slug || null,
+    product_name: product?.name || null,
+    product_category: product?.category || null,
+    product_price: Number.isFinite(price) ? price : null,
+    product_image: product?.image || null,
+    product_rating: Number.isFinite(rating) ? rating : null,
+  };
+};
 
-  return rows
-    .map((row) => ({
-      id: row.id,
-      product_id: row.product_id,
-      created_at: row.created_at,
-      product: productMap.get(row.product_id) || null,
-    }))
-    .filter((entry) => entry.product);
+const mapWishlistRow = (row) => {
+  return {
+    id: String(row.product_id),
+    slug: row.product_slug || undefined,
+    name: row.product_name || 'Product',
+    category: row.product_category || undefined,
+    description: '',
+    price: Number(row.product_price || 0),
+    discount_price: null,
+    stock: 1,
+    rating: row.product_rating === null || row.product_rating === undefined
+      ? 0
+      : Number(row.product_rating),
+    total_reviews: 0,
+    is_featured: false,
+    is_active: true,
+    created_at: row.created_at,
+    updated_at: row.created_at,
+    image: row.product_image || '',
+    images: row.product_image ? [row.product_image] : [],
+  };
 };
 
 export const getWishlist = async (userId, token) => {
   const supabase = createScopedClient(token);
   const { data, error } = await supabase
     .from('wishlists')
-    .select('id, product_id, created_at')
+    .select(`
+      id,
+      product_id,
+      product_slug,
+      product_name,
+      product_category,
+      product_price,
+      product_image,
+      product_rating,
+      created_at
+    `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw new AppError(error.message, 500);
 
-  const wishlistRows = await buildWishlistResponse(data || [], token);
-  return wishlistRows.map((entry) => entry.product);
+  return (data || []).map(mapWishlistRow);
 };
 
 export const toggleItem = async (userId, product, token) => {
-  const productId = await resolveProductId(product, token);
-
+  const productId = normalizeProductId(product?.id ?? product?.product_id);
+  const snapshot = getProductSnapshot(product);
   const supabase = createScopedClient(token);
 
   const { data: existing, error: lookupError } = await supabase
@@ -136,27 +90,22 @@ export const toggleItem = async (userId, product, token) => {
 
   const { error: insertError } = await supabase
     .from('wishlists')
-    .insert({ user_id: userId, product_id: productId });
+    .insert({ user_id: userId, product_id: productId, ...snapshot });
 
   if (insertError) throw new AppError(insertError.message, 500);
 
   return getWishlist(userId, token);
 };
 
-export const removeItem = async (userId, productId, token) => {
-  const normalizedProductId = Number(productId);
-
-  if (!Number.isFinite(normalizedProductId) || normalizedProductId <= 0) {
-    throw new AppError('Product id is required', 400);
-  }
-
+export const removeItem = async (userId, productIdValue, token) => {
+  const productId = normalizeProductId(productIdValue);
   const supabase = createScopedClient(token);
 
   const { data: existing, error: lookupError } = await supabase
     .from('wishlists')
     .select('id')
     .eq('user_id', userId)
-    .eq('product_id', normalizedProductId)
+    .eq('product_id', productId)
     .maybeSingle();
 
   if (lookupError) throw new AppError(lookupError.message, 500);
@@ -166,7 +115,7 @@ export const removeItem = async (userId, productId, token) => {
     .from('wishlists')
     .delete()
     .eq('user_id', userId)
-    .eq('product_id', normalizedProductId);
+    .eq('product_id', productId);
 
   if (deleteError) throw new AppError(deleteError.message, 500);
 

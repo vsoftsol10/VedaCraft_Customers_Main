@@ -8,7 +8,7 @@ export default function PriceSummaryPanel({ items, currentStep, onContinue, canC
     const savings = totalMRP - totalAmount;
     const ctaLabel = currentStep === 3 ? t('checkout.placeOrder') : t('checkout.continue');
     return (<div className="w-full lg:w-96 flex-shrink-0">
-      <div className="bg-white border border-gray-200 sticky top-24">
+      <div className="bg-white border border-gray-200 lg:sticky lg:top-24">
         {/* Header */}
         <div className="p-5 border-b border-gray-100">
           <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide">
@@ -102,7 +102,7 @@ export default function PriceSummaryPanel({ items, currentStep, onContinue, canC
 
         {/* Sticky CTA Footer */}
         <div className="p-5 border-t border-gray-100 bg-gray-50/50">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between gap-4 mb-3">
             <div>
               <p className="text-xs text-gray-500 line-through">
                 &#8377;{totalMRP.toLocaleString('en-IN')}
@@ -111,7 +111,7 @@ export default function PriceSummaryPanel({ items, currentStep, onContinue, canC
                 &#8377;{totalAmount.toLocaleString('en-IN')}
               </p>
             </div>
-            <button disabled={!canContinue} onClick={onContinue} className={`px-8 py-3 rounded font-semibold text-sm transition-all duration-200 ${canContinue
+            <button disabled={!canContinue} onClick={onContinue} className={`px-5 sm:px-8 py-3 rounded font-semibold text-sm transition-all duration-200 ${canContinue
             ? 'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200 hover:shadow-lg hover:shadow-green-200 active:scale-[0.98]'
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
               {ctaLabel}

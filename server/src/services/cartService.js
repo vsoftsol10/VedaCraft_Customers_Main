@@ -1,19 +1,11 @@
 import { createScopedClient } from '../config/supabase.js';
 import { AppError } from '../utils/apiResponse.js';
-
-const CART_PRODUCT_COLUMNS = `
-  id,
-  name,
-  price,
-  discount_price,
-  rating,
-  image_url
-`;
+import { assertStockAvailable } from './inventoryService.js';
 
 const normalizeProductId = (value) => {
-  const productId = Number(value);
+  const productId = String(value ?? '').trim();
 
-  if (!Number.isFinite(productId) || productId <= 0) {
+  if (!productId) {
     throw new AppError('Product id is required', 400);
   }
 
@@ -35,81 +27,17 @@ const getItemSnapshot = (item) => {
   const rating = Number(item?.rating);
 
   return {
+    product_slug: item?.slug || null,
     product_name: item?.name || null,
+    product_category: item?.category || null,
     product_price: Number.isFinite(price) ? price : null,
     product_image: item?.image || null,
     product_rating: Number.isFinite(rating) ? rating : null,
   };
 };
 
-const toProductMap = (products) => {
-  return new Map(
-    (products || []).map((product) => [
-      Number(product.id),
-      {
-        id: Number(product.id),
-        name: product.name,
-        price: product.discount_price ?? product.price,
-        image_url: product.image_url,
-        rating: product.rating,
-      },
-    ])
-  );
-};
-
-const getProductsByIds = async (productIds, token) => {
-  const ids = [...new Set(productIds.map(Number).filter((id) => Number.isFinite(id)))];
-  if (!ids.length) return new Map();
-
-  const supabase = createScopedClient(token);
-  const { data, error } = await supabase
-    .from('products')
-    .select(CART_PRODUCT_COLUMNS)
-    .in('id', ids)
-    .eq('is_active', true);
-
-  if (error) throw new AppError(error.message, 500);
-
-  return toProductMap(data);
-};
-
-const findActiveProductId = async (filters, token) => {
-  const supabase = createScopedClient(token);
-  let query = supabase
-    .from('products')
-    .select('id')
-    .eq('is_active', true)
-    .limit(1);
-
-  Object.entries(filters).forEach(([key, value]) => {
-    query = query.eq(key, value);
-  });
-
-  const { data, error } = await query.maybeSingle();
-
-  if (error) throw new AppError(error.message, 500);
-  return data?.id ? Number(data.id) : null;
-};
-
-const resolveProductId = async (item, token) => {
-  const requestedId = Number(item?.id ?? item?.product_id);
-
-  if (Number.isFinite(requestedId) && requestedId > 0) {
-    const activeProductId = await findActiveProductId({ id: requestedId }, token);
-    if (activeProductId) return activeProductId;
-  }
-
-  const slug = String(item?.slug || '').trim();
-  if (slug) {
-    const activeProductId = await findActiveProductId({ slug }, token);
-    if (activeProductId) return activeProductId;
-  }
-
-  if (!Number.isFinite(requestedId) || requestedId <= 0) {
-    throw new AppError('Product id is required', 400);
-  }
-
-  throw new AppError('Product not found', 404);
+const resolveProductId = (item) => {
+  return normalizeProductId(item?.id ?? item?.product_id);
 };
 
 const getOrCreateCart = async (userId, token) => {
@@ -134,21 +62,18 @@ const getOrCreateCart = async (userId, token) => {
   return created.id;
 };
 
-const mapCartRow = (row, productMap = new Map()) => {
-  const product = productMap.get(row.product_id) || {};
-  const price = product.discount_price ?? product.price ?? row.product_price ?? 0;
-
+const mapCartRow = (row) => {
   return {
-    id: product.id ?? row.product_id,
-    name: product.name || row.product_name || 'Product',
-    price: Number(price),
-    image: product.image_url || row.product_image || '',
+    id: String(row.product_id),
+    slug: row.product_slug || undefined,
+    name: row.product_name || 'Product',
+    category: row.product_category || undefined,
+    price: Number(row.product_price || 0),
+    image: row.product_image || '',
     quantity: row.quantity,
-    rating: product.rating === null || product.rating === undefined
-      ? row.product_rating === null || row.product_rating === undefined
-        ? undefined
-        : Number(row.product_rating)
-      : Number(product.rating),
+    rating: row.product_rating === null || row.product_rating === undefined
+      ? undefined
+      : Number(row.product_rating),
   };
 };
 
@@ -169,7 +94,9 @@ export const getCart = async (userId, token) => {
     .select(`
       id,
       product_id,
+      product_slug,
       product_name,
+      product_category,
       product_price,
       product_image,
       product_rating,
@@ -181,13 +108,11 @@ export const getCart = async (userId, token) => {
 
   if (error) throw new AppError(error.message, 500);
 
-  const productMap = await getProductsByIds((data || []).map((row) => row.product_id), token);
-
-  return (data || []).map((row) => mapCartRow(row, productMap)).filter((item) => item.id);
+  return (data || []).map(mapCartRow).filter((item) => item.id);
 };
 
 export const addItem = async (userId, item, token) => {
-  const productId = await resolveProductId(item, token);
+  const productId = resolveProductId(item);
   const quantity = normalizeQuantity(item?.quantity, 1);
   const snapshot = getItemSnapshot(item);
   const supabase = createScopedClient(token);
@@ -203,6 +128,8 @@ export const addItem = async (userId, item, token) => {
   if (lookupError) throw new AppError(lookupError.message, 500);
 
   if (existing) {
+    await assertStockAvailable([{ id: productId, quantity: existing.quantity + quantity }]);
+
     const { error: updateError } = await supabase
       .from('cart_items')
       .update({ quantity: existing.quantity + quantity, ...snapshot })
@@ -211,6 +138,8 @@ export const addItem = async (userId, item, token) => {
     if (updateError) throw new AppError(updateError.message, 500);
     return getCart(userId, token);
   }
+
+  await assertStockAvailable([{ id: productId, quantity }]);
 
   const { error: insertError } = await supabase
     .from('cart_items')
@@ -236,6 +165,8 @@ export const updateItemQuantity = async (userId, productIdValue, quantityValue, 
 
   if (lookupError) throw new AppError(lookupError.message, 500);
   if (!existing) throw new AppError('Cart item not found', 404);
+
+  await assertStockAvailable([{ id: productId, quantity }]);
 
   const { error: updateError } = await supabase
     .from('cart_items')

@@ -20,39 +20,11 @@ export default function Home() {
                 const apiProducts = response.products;
                 // Map API products to frontend domain model (camelCase)
                 const domainApiProducts = apiProducts.map((p) => mapApiProductToProduct(p));
-                // Create a lookup map of slug -> DomainProduct
-                const apiProductMap = new Map();
-                domainApiProducts.forEach((p) => {
-                    if (p.slug) {
-                        apiProductMap.set(p.slug, p);
-                    }
-                });
-                // Merge backend data into local products
-                const mergeProduct = (localProd) => {
-                    const backendProd = apiProductMap.get(localProd.slug);
-                    if (backendProd) {
-                        return {
-                            ...localProd,
-                            slug: backendProd.slug || localProd.slug,
-                            image: backendProd.image || localProd.image,
-                            images: backendProd.images?.length ? backendProd.images : (localProd.images || [localProd.image]),
-                            id: backendProd.id, // Use backend ID
-                            price: backendProd.price,
-                            discountPrice: backendProd.discountPrice,
-                            stock: backendProd.stock,
-                            rating: backendProd.rating,
-                            totalReviews: backendProd.totalReviews,
-                            isFeatured: backendProd.isFeatured,
-                            createdAt: backendProd.createdAt,
-                            updatedAt: backendProd.updatedAt,
-                            // Preserve local image, section, ordering, and UI metadata
-                        };
-                    }
-                    return localProd;
-                };
-                setBestSellers((prev) => prev.map(mergeProduct));
-                setNewArrivals((prev) => prev.map(mergeProduct));
-                setTrending((prev) => prev.map(mergeProduct));
+                if (domainApiProducts.length > 0) {
+                    setBestSellers(domainApiProducts.slice(0, 10));
+                    setNewArrivals((domainApiProducts.slice(10, 20).length ? domainApiProducts.slice(10, 20) : domainApiProducts.slice(0, 10)));
+                    setTrending((domainApiProducts.slice(20, 30).length ? domainApiProducts.slice(20, 30) : domainApiProducts.slice(0, 10)));
+                }
             }
             catch (error) {
                 console.warn('Backend products API unavailable. Falling back to local data:', error);

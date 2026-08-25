@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Navbar from './components/Navbar/Navbar';
 import Home from './pages/Home';
@@ -14,6 +15,7 @@ import WishlistPage from './pages/WishlistPage';
 import CheckoutPage from './pages/CheckoutPage';
 import LoginPage from './pages/LoginPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import LegalPolicies from './pages/LegalPolicies';
 import ProfilePage from './pages/profile/ProfilePage';
 import MyProfile from './pages/profile/MyProfile';
 import MyOrders from './pages/profile/MyOrders';
@@ -32,16 +34,31 @@ import { AuthProvider } from './context/AuthContext';
 import { LoginPromptProvider } from './context/LoginPromptContext';
 import CartDrawer from './components/Cart/CartDrawer';
 import ChatbotWidget from './components/Chatbot/ChatbotWidget';
+import { NotificationProvider } from './context/NotificationContext';
+import Seller from './pages/Seller'
+function ScrollToTop() {
+    const { pathname, search } = useLocation();
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }, [pathname, search]);
+
+    return null;
+}
+
 function App() {
     return (<AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <LoginPromptProvider>
           <WishlistProvider>
+            <NotificationProvider>
+
             <CartProvider>
           <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
             <Navbar />
-            <div className="flex-1">
+            <div className="flex-1 ">
               <Routes>
                 <Route path="/login" element={<LoginPage />}/>
                 <Route path="/profile-completion" element={<ProfileCompletion />}/>
@@ -60,7 +77,8 @@ function App() {
                       <Route path="/wishlist" element={<WishlistPage />}/>
                       <Route path="/checkout" element={<CheckoutPage />}/>
                       <Route path="/search" element={<SearchResultsPage />}/>
-
+                      <Route path="/legal-policies" element={<LegalPolicies />}/>
+                      <Route path='/seller' element={<Seller/>}/>
                       {/* Profile routes - additionally protected by ProtectedRoute */}
                       <Route path="/profile" element={<ProtectedRoute>
                             <ProfilePage />
@@ -80,9 +98,12 @@ function App() {
             </div>
             <Footer />
             <CartDrawer />
+
             <ChatbotWidget />
           </div>
             </CartProvider>
+            </NotificationProvider >
+
           </WishlistProvider>
         </LoginPromptProvider>
       </BrowserRouter>

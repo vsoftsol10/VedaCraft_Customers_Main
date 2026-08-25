@@ -70,6 +70,7 @@ export default function CheckoutPage() {
     // Determine checkout items: Buy Now single item or full cart
     const isBuyNow = !!buyNowItem;
     const checkoutItems = isBuyNow ? [buyNowItem] : items;
+    const hasKnownOutOfStockItem = checkoutItems.some((item) => item.stock !== undefined && Number(item.stock) <= 0);
     // Step management (1=address, 2=summary, 3=payment)
     const stepFromUrl = STEP_KEYS.indexOf(searchParams.get('step'));
     const [currentStep, setCurrentStep] = useState(() => {
@@ -242,6 +243,10 @@ export default function CheckoutPage() {
         void playOrderPlacedSound?.();
     };
     const handleContinue = async () => {
+        if (currentStep >= 2 && hasKnownOutOfStockItem) {
+            alert('Out of stock products cannot be purchased.');
+            return;
+        }
         if (currentStep === 3) {
             const playOrderPlacedSound = createOrderPlacedSound();
             const total = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -324,9 +329,9 @@ export default function CheckoutPage() {
         if (currentStep === 1)
             return !!selectedAddress;
         if (currentStep === 2)
-            return checkoutItems.length > 0;
+            return checkoutItems.length > 0 && !hasKnownOutOfStockItem;
         if (currentStep === 3)
-            return !!selectedPayment;
+            return !!selectedPayment && !hasKnownOutOfStockItem;
         return false;
     })();
     // Empty state
@@ -391,10 +396,10 @@ export default function CheckoutPage() {
           {/* Left Column: Step Content */}
           <div className="flex-1 min-w-0">
             {/* Step 1: Address */}
-            {currentStep === 1 && (<AddressStep selectedAddressId={selectedAddressId} onSelectAddress={handleSelectAddress} onAddAddress={handleOpenAddAddress} onEditAddress={handleOpenEditAddress} onDeleteAddress={handleDeleteAddress} onContinue={() => goToStep(2)}/>)}
+            {currentStep === 1 && (<AddressStep selectedAddressId={selectedAddressId} onSelectAddress={handleSelectAddress} onAddAddress={handleOpenAddAddress} onEditAddress={handleOpenEditAddress} onDeleteAddress={handleDeleteAddress} onContinue={handleContinue}/>)}
 
             {/* Step 2: Order Summary */}
-            {currentStep === 2 && (<OrderSummaryStep selectedAddress={selectedAddress} items={checkoutItems} onChangeAddress={() => goToStep(1)} onContinue={() => goToStep(3)} isBuyNow={isBuyNow}/>)}
+            {currentStep === 2 && (<OrderSummaryStep selectedAddress={selectedAddress} items={checkoutItems} onChangeAddress={() => goToStep(1)} onContinue={handleContinue} isBuyNow={isBuyNow}/>)}
 
             {/* Step 3: Payment */}
             {currentStep === 3 && (<PaymentStep selectedAddress={selectedAddress} items={checkoutItems} onChangeAddress={() => goToStep(1)} onChangeSummary={() => goToStep(2)} selectedPayment={selectedPayment} onSelectPayment={setSelectedPayment}/>)}

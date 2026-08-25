@@ -7,8 +7,8 @@ const steps = [
 ];
 export default function CheckoutStepper({ currentStep, onStepClick }) {
     const { t } = useTranslation();
-    return (<div className="bg-white border border-gray-200 p-6 mb-6">
-      <div className="flex items-center justify-center">
+    return (<div className="bg-white border border-gray-200 p-4 sm:p-6 mb-6 overflow-hidden">
+      <div className="flex items-start justify-between sm:items-center sm:justify-center">
         {steps.map((step, index) => (<div key={step.number} className="flex items-center">
             {/* Step circle + label */}
             <button onClick={() => {
@@ -32,7 +32,7 @@ export default function CheckoutStepper({ currentStep, onStepClick }) {
             </button>
 
             {/* Connector line */}
-            {index < steps.length - 1 && (<div className="w-16 sm:w-24 md:w-32 h-[2px] mx-2 sm:mx-4 mb-6 relative overflow-hidden">
+            {index < steps.length - 1 && (<div className="w-8 sm:w-24 md:w-32 h-[2px] mx-1.5 sm:mx-4 mt-4 sm:mb-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gray-200 rounded-full"/>
                 <div className={`absolute inset-y-0 left-0 bg-green-500 rounded-full transition-all duration-500 ease-out ${step.number < currentStep ? 'w-full' : 'w-0'}`}/>
               </div>)}

@@ -59,8 +59,8 @@ export default function ChatbotWidget() {
             window.setTimeout(() => inputRef.current?.focus(), 100);
         }
     };
-    return (<div className="fixed bottom-28 right-4 z-[70] sm:bottom-28 sm:right-6">
-      {isOpen && (<section className="mb-3 flex h-[min(520px,calc(100vh-120px))] w-[calc(100vw-32px)] max-w-sm flex-col overflow-hidden rounded-2xl border border-green-100 bg-white shadow-2xl">
+    return (<div className="fixed bottom-5 right-4 z-[70] sm:right-6">
+      {isOpen && (<section className="mb-3 flex h-[min(460px,calc(100vh-300px))] min-h-[320px] w-[calc(100vw-32px)] max-w-sm flex-col overflow-hidden rounded-2xl border border-green-100 bg-white shadow-2xl">
           <div className="flex items-center justify-between bg-green-700 px-4 py-3 text-white">
             <div className="flex items-center gap-2">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/20">

@@ -17,7 +17,7 @@ import recentSearchRouter from './recentSearchRoutes.js';
 import paymentRouter from './paymentRoutes.js';
 import chatRouter from './chatRoutes.js';
 import deliveryRouter from './deliveryRoutes.js';
-
+import notificationRouter from './notificationRoutes.js';
 const router = Router();
 
 // ─── Core Routes ─────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ router.use('/recent-searches', recentSearchRouter);
 router.use('/payment', paymentRouter);
 router.use('/chat', chatRouter);
 router.use('/delivery', deliveryRouter);
-
+router.use('/notifications', notificationRouter);
 // ─── Future Feature Routes (add here when ready) ─────────────────────────────
 // router.use('/categories', categoriesRouter);
 // router.use('/cart',      cartRouter);

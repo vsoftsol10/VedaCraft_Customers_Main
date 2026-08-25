@@ -197,7 +197,7 @@ export default function HelpSupport() {
               <Phone className="w-5 h-5"/>
             </div>
             <p className="text-sm font-semibold text-gray-800">Call Us</p>
-            <p className="text-xs text-gray-400">+91 98765 43210</p>
+            <p className="text-xs text-gray-400">91 9095422237</p>
           </div>
 
           {/* Email */}
@@ -207,7 +207,7 @@ export default function HelpSupport() {
               <Mail className="w-5 h-5"/>
             </div>
             <p className="text-sm font-semibold text-gray-800">Email</p>
-            <p className="text-xs text-gray-400">support@vedacraft.in</p>
+            <p className="text-xs text-gray-400">vedaconnecttvl@gmail.com</p>
           </div>
         </div>
       </div>

@@ -31,12 +31,17 @@ const localProductMap = new Map(
 const mapWishlistProduct = (apiProduct) => {
     const product = mapApiProductToProduct(apiProduct);
     const localProduct = localProductMap.get(toSlug(product.slug || product.name));
-    if (!localProduct?.image || product.image)
-        return product;
     return {
         ...product,
-        image: localProduct.image,
-        images: localProduct.images?.length ? localProduct.images : [localProduct.image],
+        category: product.category || localProduct?.category || 'Product',
+        image: product.image || localProduct?.image || '',
+        images: product.images?.length
+            ? product.images
+            : localProduct?.images?.length
+                ? localProduct.images
+                : localProduct?.image
+                    ? [localProduct.image]
+                    : [],
     };
 };
 const getPayloadData = async (path) => {
@@ -114,7 +119,15 @@ export const addToWishlist = async (product, tokenOverride) => {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ id: wishlistProduct.id, slug: wishlistProduct.slug }),
+        body: JSON.stringify({
+            product_id: wishlistProduct.id,
+            slug: wishlistProduct.slug,
+            name: wishlistProduct.name,
+            category: wishlistProduct.category,
+            price: wishlistProduct.discountPrice || wishlistProduct.price,
+            image: wishlistProduct.image,
+            rating: wishlistProduct.rating,
+        }),
     });
     const payload = await handleResponse(res);
     const items = Array.isArray(payload.data) ? payload.data : [];

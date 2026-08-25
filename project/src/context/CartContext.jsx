@@ -4,10 +4,10 @@ import { useLoginPrompt } from './LoginPromptContext';
 import * as cartApi from '../services/cartApi';
 const CartContext = createContext(undefined);
 const normalizeCartItem = (item) => {
-    const id = Number(item.id);
+    const id = item.id === undefined || item.id === null ? '' : String(item.id);
     const price = Number(item.price);
     const quantity = Number(item.quantity ?? 1);
-    if (!Number.isFinite(id) || id <= 0)
+    if (!id)
         return null;
     if (!Number.isFinite(price) || price < 0)
         return null;
@@ -15,10 +15,13 @@ const normalizeCartItem = (item) => {
         return null;
     return {
         id,
+        slug: item.slug,
         name: item.name || 'Product',
+        category: item.category,
         price,
         image: item.image || '',
         quantity,
+        stock: item.stock === undefined ? undefined : Number(item.stock),
         rating: item.rating === undefined ? undefined : Number(item.rating),
     };
 };
@@ -54,9 +57,6 @@ export function CartProvider({ children }) {
                     setItems([]);
                 }
                 return;
-            }
-            if (mounted) {
-                setItems([]);
             }
             try {
                 const backendItems = await cartApi.getCartWithToken(accessToken);

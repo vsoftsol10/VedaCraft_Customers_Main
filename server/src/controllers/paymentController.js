@@ -3,6 +3,7 @@ import Razorpay from 'razorpay';
 import { sendError, sendSuccess } from '../utils/apiResponse.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { sendOrderConfirmationEmail } from '../services/emailService.js';
+import { decrementStockForItems, restoreStockForItems } from '../services/inventoryService.js';
 
 let razorpayInstance;
 
@@ -112,6 +113,10 @@ export const verifyPaymentAndCreateOrder = async (req, res, next) => {
       return sendSuccess(res, mockOrder, 'Payment verified and order created', 201);
     }
 
+    const orderItems = items || [];
+
+    await decrementStockForItems(orderItems);
+
     const { data, error } = await supabaseAdmin
       .from('orders')
       .insert([
@@ -122,7 +127,7 @@ export const verifyPaymentAndCreateOrder = async (req, res, next) => {
           total: Number(total || 0),
           item_count: Number(itemCount || 0),
           product: product || 'Vedha Craft Order',
-          items: items || [],
+          items: orderItems,
           address: address || null,
           // If the columns exist, we could save them:
           // razorpay_payment_id,
@@ -133,31 +138,9 @@ export const verifyPaymentAndCreateOrder = async (req, res, next) => {
       .select()
       .single();
 
-    if (error) throw error;
-
-    // Optional: Reduce stock
-    // Since Supabase schema might vary, we attempt a simple update.
-    // If it fails, we catch the error so it doesn't break the order flow.
-    try {
-      if (items && items.length > 0) {
-        for (const item of items) {
-          // Attempt to get current stock and reduce it
-          const { data: productData } = await supabaseAdmin
-            .from('products')
-            .select('stock')
-            .eq('id', item.id)
-            .single();
-            
-          if (productData && typeof productData.stock === 'number') {
-            await supabaseAdmin
-              .from('products')
-              .update({ stock: Math.max(0, productData.stock - item.quantity) })
-              .eq('id', item.id);
-          }
-        }
-      }
-    } catch (stockError) {
-      console.warn('Failed to reduce stock (might not exist in schema):', stockError.message);
+    if (error) {
+      await restoreStockForItems(orderItems);
+      throw error;
     }
 
     if (userEmail) {

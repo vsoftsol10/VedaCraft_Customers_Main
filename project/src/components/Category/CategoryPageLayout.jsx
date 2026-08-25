@@ -22,21 +22,28 @@ function FilterSection({ title, items, selected, onToggle, }) {
         </div>)}
     </div>);
 }
-function ProductCard({ product, badgeIcon: BadgeIcon, badgeText, badgeColorClass }) {
+function ProductCard({ product }) {
     const { addToCart } = useCart();
     const { isInWishlist, toggleWishlist } = useWishlist();
     const { t } = useTranslation();
     const wished = isInWishlist(product.id);
     const [added, setAdded] = useState(false);
+    const displayPrice = product.discountPrice || product.price;
+    const stockQuantity = Number(product.stock ?? product.quantity ?? 0);
+    const isOutOfStock = stockQuantity <= 0;
     const handleAdd = (e) => {
         e.preventDefault();
+        if (isOutOfStock)
+            return;
         const addedToCart = addToCart({
             id: product.id,
             slug: product.slug,
             name: product.name,
-            price: product.price,
+            category: product.category,
+            price: displayPrice,
             image: product.image,
             quantity: 1,
+            stock: stockQuantity,
             rating: product.rating
         });
         if (!addedToCart) return;
@@ -48,12 +55,6 @@ function ProductCard({ product, badgeIcon: BadgeIcon, badgeText, badgeColorClass
         <Link to={`/product/${product.slug || product.id}`} className="block w-full h-full">
           <img src={product.image} alt={t(`productsData.${product.name}`, product.name)} className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500"/>
         </Link>
-        {/* Badge */}
-        <div className="absolute top-2 left-2">
-          <span className={`flex items-center gap-1 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColorClass}`}>
-            <BadgeIcon className="w-2.5 h-2.5"/> {badgeText}
-          </span>
-        </div>
         {/* Wishlist */}
         <button onClick={(e) => {
             e.preventDefault();
@@ -70,7 +71,7 @@ function ProductCard({ product, badgeIcon: BadgeIcon, badgeText, badgeColorClass
         <p className="text-[10px] text-green-600 font-medium">{t(`productsData.${product.category}`, product.category)}</p>
 
         <div className="flex items-center justify-between mt-auto pt-2">
-          <span className="text-sm font-bold text-gray-900">₹ {product.price}</span>
+          <span className="text-sm font-bold text-gray-900">&#8377; {displayPrice}</span>
           <div className="flex items-center gap-0.5">
             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400"/>
             <span className="text-[10px] text-gray-600 font-medium">{product.rating}</span>
@@ -78,18 +79,20 @@ function ProductCard({ product, badgeIcon: BadgeIcon, badgeText, badgeColorClass
         </div>
 
         {/* Add to Cart */}
-        <button onClick={handleAdd} className={`mt-2 w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-lg transition-all duration-200 active:scale-95 ${added
-            ? 'bg-green-600 text-white'
-            : 'border border-green-500 text-green-600 hover:bg-green-600 hover:text-white'}`}>
+        <button disabled={isOutOfStock} onClick={handleAdd} className={`mt-2 w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-lg transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:active:scale-100 ${isOutOfStock
+            ? 'border border-gray-200 bg-gray-100 text-gray-400'
+            : added
+                ? 'bg-green-600 text-white'
+                : 'border border-green-500 text-green-600 hover:bg-green-600 hover:text-white'}`}>
           <ShoppingCart className="w-3 h-3"/>
-          {added ? t('productCard.addedToCart') : t('productCard.add')}
+          {isOutOfStock ? 'Out of stock' : added ? t('productCard.addedToCart') : t('productCard.add')}
         </button>
 
 
       </div>
     </div>);
 }
-export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass, products: initialProducts, apiCategory, categories, features, discounts, }) {
+export default function CategoryPageLayout({ title, icon: Icon, products: initialProducts, apiCategory, categories, features, discounts, }) {
     const { t } = useTranslation();
     const pageKeyMap = {
         'Eco-Friendly Products': 'eco',
@@ -144,7 +147,10 @@ export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass,
                     }
                 });
                 if (mounted) {
-                    if (initialProducts) {
+                    if (domainApiProducts.length > 0) {
+                        setProducts(domainApiProducts);
+                    }
+                    else if (initialProducts) {
                         // Merge backend data into local products using slug mapping
                         const mergeProduct = (localProd) => {
                             const normalizedLocal = normalizeProduct(localProd);
@@ -198,6 +204,14 @@ export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass,
     const activeFiltersCount = filters.categories.length + filters.features.length + filters.discounts.length +
         (filters.inStock ? 1 : 0) + (filters.outOfStock ? 1 : 0);
     const filteredProducts = useMemo(() => {
+        const stableIndex = (value, modulo) => {
+            if (!modulo)
+                return 0;
+            const numericValue = Number(value);
+            if (Number.isFinite(numericValue))
+                return numericValue % modulo;
+            return String(value || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % modulo;
+        };
         const filtered = products.filter((product) => {
             // 1. Category
             if (filters.categories.length > 0 && !filters.categories.includes(product.category)) {
@@ -207,16 +221,17 @@ export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass,
             if (product.price > filters.priceMax) {
                 return false;
             }
-            // 3. Availability (Pseudo-random: ID % 7 == 0 is Out of Stock)
-            const isOutOfStock = product.id % 7 === 0;
+            // 3. Availability
+            const isOutOfStock = Number(product.stock ?? product.quantity ?? 0) <= 0;
             if (filters.inStock && !filters.outOfStock && isOutOfStock)
                 return false;
             if (filters.outOfStock && !filters.inStock && !isOutOfStock)
                 return false;
             // 4. Features
             if (filters.features.length > 0) {
-                const feature1 = features[product.id % features.length];
-                const feature2 = features[(product.id * 2) % features.length];
+                const productIndex = stableIndex(product.id, features.length);
+                const feature1 = features[productIndex];
+                const feature2 = features[(productIndex * 2) % features.length];
                 const productFeatures = [feature1, feature2];
                 const hasFeature = filters.features.some(f => productFeatures.includes(f));
                 if (!hasFeature)
@@ -224,7 +239,7 @@ export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass,
             }
             // 5. Discount
             if (filters.discounts.length > 0) {
-                const productDiscount = discounts[product.id % discounts.length];
+                const productDiscount = product.offer || discounts[stableIndex(product.id, discounts.length)];
                 if (!filters.discounts.includes(productDiscount))
                     return false;
             }
@@ -290,7 +305,7 @@ export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass,
         </nav>
       </div>
 
-      <div className="md:hidden sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
+      <div className="md:hidden sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between gap-3 shadow-sm">
         <span className="text-sm font-medium text-gray-700">
           {filteredProducts.length} {t('filter.products')}
         </span>
@@ -318,11 +333,11 @@ export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass,
         </aside>
 
         <main className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
             <p className="text-sm text-gray-600">
               {t('filter.showing')} <span className="font-semibold text-gray-800">{filteredProducts.length}</span> {t('filter.products')}
             </p>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400 cursor-pointer">
               <option value="featured">{t('filter.sortFeatured')}</option>
               <option value="price-asc">{t('filter.sortPriceLow')}</option>
               <option value="price-desc">{t('filter.sortPriceHigh')}</option>
@@ -336,8 +351,8 @@ export default function CategoryPageLayout({ title, icon: Icon, badgeColorClass,
               <Icon className="w-12 h-12 mb-3 text-gray-300"/>
               <p className="text-base font-medium">{t('filter.noProducts')}</p>
               <button onClick={clearAll} className="mt-3 text-sm text-green-600 underline">{t('filter.clearFilters')}</button>
-            </div>) : (<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} badgeIcon={Icon} badgeText={displayTitle.split(' ')[0]} badgeColorClass={badgeColorClass}/>))}
+            </div>) : (<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {filteredProducts.map((product) => (<ProductCard key={product.id} product={product}/>))}
             </div>)}
         </main>
       </div>

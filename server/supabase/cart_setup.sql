@@ -1,7 +1,8 @@
 -- ============================================================
 -- VedaCraft Cart Tables
 -- Run this in Supabase Dashboard -> SQL Editor
--- Requires public.products(id) to exist.
+-- Stores product UUIDs as text snapshots so cart works even when the
+-- catalog lives in another Supabase project.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.carts (
@@ -36,8 +37,12 @@ BEGIN
     AND column_name = 'product_id';
 
   IF current_product_id_type IS NOT NULL
-     AND current_product_id_type <> 'bigint' THEN
-    DROP TABLE public.cart_items;
+     AND current_product_id_type <> 'text' THEN
+    ALTER TABLE public.cart_items
+      DROP CONSTRAINT IF EXISTS cart_items_product_id_fkey;
+
+    ALTER TABLE public.cart_items
+      ALTER COLUMN product_id TYPE TEXT USING product_id::text;
   END IF;
 END;
 $$;
@@ -45,8 +50,10 @@ $$;
 CREATE TABLE IF NOT EXISTS public.cart_items (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   cart_id     UUID NOT NULL REFERENCES public.carts(id) ON DELETE CASCADE,
-  product_id  BIGINT NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  product_id  TEXT NOT NULL,
+  product_slug TEXT,
   product_name TEXT,
+  product_category TEXT,
   product_price NUMERIC(10, 2),
   product_image TEXT,
   product_rating NUMERIC(3, 2),
@@ -55,32 +62,13 @@ CREATE TABLE IF NOT EXISTS public.cart_items (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM pg_constraint
-    WHERE conname = 'cart_items_product_id_fkey'
-      AND conrelid = 'public.cart_items'::regclass
-      AND pg_get_constraintdef(oid) NOT ILIKE '%REFERENCES products(id)%'
-  ) THEN
-    ALTER TABLE public.cart_items DROP CONSTRAINT cart_items_product_id_fkey;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_constraint
-    WHERE conname = 'cart_items_product_id_fkey'
-      AND conrelid = 'public.cart_items'::regclass
-  ) THEN
-    ALTER TABLE public.cart_items
-      ADD CONSTRAINT cart_items_product_id_fkey
-      FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
-  END IF;
-END $$;
+ALTER TABLE public.cart_items
+  DROP CONSTRAINT IF EXISTS cart_items_product_id_fkey;
 
 ALTER TABLE public.cart_items
+  ADD COLUMN IF NOT EXISTS product_slug TEXT,
   ADD COLUMN IF NOT EXISTS product_name TEXT,
+  ADD COLUMN IF NOT EXISTS product_category TEXT,
   ADD COLUMN IF NOT EXISTS product_price NUMERIC(10, 2),
   ADD COLUMN IF NOT EXISTS product_image TEXT,
   ADD COLUMN IF NOT EXISTS product_rating NUMERIC(3, 2);

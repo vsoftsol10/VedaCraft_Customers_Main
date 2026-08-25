@@ -1,6 +1,6 @@
 import { AppError } from '../utils/apiResponse.js';
 
-const SORT_FIELDS = new Set(['created_at', 'price', 'rating', 'name', 'stock']);
+const SORT_FIELDS = new Set(['created_at', 'updated_at', 'price', 'name', 'quantity', 'status']);
 const SORT_ORDERS = new Set(['asc', 'desc']);
 
 const toPositiveInt = (value, fallback, max = 100) => {
@@ -37,6 +37,7 @@ export const validateProductQuery = (req, _res, next) => {
     sortOrder = 'desc',
     inStock,
     featured,
+    status,
   } = req.query;
 
   const normalizedSortBy = String(sortBy);
@@ -60,6 +61,7 @@ export const validateProductQuery = (req, _res, next) => {
     minRating: toNumber(minRating),
     inStock: toBoolean(inStock),
     featured: toBoolean(featured),
+    status: status ? String(status).trim() : undefined,
     sortBy: normalizedSortBy,
     sortOrder: normalizedSortOrder,
   };
