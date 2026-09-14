@@ -333,7 +333,7 @@ export const sendOrderConfirmationEmail = async ({
     const deliveryDate = new Date();
 
     deliveryDate.setDate(
-      deliveryDate.getDate() + 5
+      deliveryDate.getDate() + 7
     );
 
     const estimatedDelivery =

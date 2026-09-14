@@ -3,13 +3,17 @@ import { ShoppingCart, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import WishlistButton from './WishlistButton';
 import { useCart } from '../../context/CartContext';
+import { getProductPricing } from '../../utils/pricing';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const { t } = useTranslation();
-  const displayPrice = product.discountPrice || product.price;
-  const stockQuantity = Number(product.quantity ?? product.stock ?? 0);
-  const isOutOfStock = stockQuantity <= 0;
+  const pricing = getProductPricing(product);
+  const displayPrice = pricing.salePrice;
+  const stockValue = product.quantity ?? product.stock;
+  const stockQuantity = Number(stockValue);
+  const hasKnownStock = stockValue !== undefined && stockValue !== null && Number.isFinite(stockQuantity);
+  const isOutOfStock = hasKnownStock && stockQuantity <= 0;
   const categoryLabel = product.category
     ? t(`productsData.${product.category}`, product.category)
     : 'Product';
@@ -65,9 +69,12 @@ export default function ProductCard({ product }) {
               name: product.name,
               category: product.category,
               price: displayPrice,
+              originalPrice: pricing.mrp,
+              discountPrice: pricing.hasDiscount ? displayPrice : null,
+              offer: product.offer,
               image: product.image,
               quantity: 1,
-              stock: stockQuantity,
+              stock: hasKnownStock ? stockQuantity : undefined,
               rating: product.rating,
             });
           }}

@@ -6,6 +6,7 @@ import { mapApiProductToProduct, mapLocalProductToProduct } from '../../types/pr
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { getProductPricing } from '../../utils/pricing';
 function FilterSection({ title, items, selected, onToggle, }) {
     const [open, setOpen] = useState(true);
     const { t } = useTranslation();
@@ -28,9 +29,12 @@ function ProductCard({ product }) {
     const { t } = useTranslation();
     const wished = isInWishlist(product.id);
     const [added, setAdded] = useState(false);
-    const displayPrice = product.discountPrice || product.price;
-    const stockQuantity = Number(product.stock ?? product.quantity ?? 0);
-    const isOutOfStock = stockQuantity <= 0;
+    const pricing = getProductPricing(product);
+    const displayPrice = pricing.salePrice;
+    const stockValue = product.stock ?? product.quantity;
+    const stockQuantity = Number(stockValue);
+    const hasKnownStock = stockValue !== undefined && stockValue !== null && Number.isFinite(stockQuantity);
+    const isOutOfStock = hasKnownStock && stockQuantity <= 0;
     const handleAdd = (e) => {
         e.preventDefault();
         if (isOutOfStock)
@@ -41,9 +45,12 @@ function ProductCard({ product }) {
             name: product.name,
             category: product.category,
             price: displayPrice,
+            originalPrice: pricing.mrp,
+            discountPrice: pricing.hasDiscount ? displayPrice : null,
+            offer: product.offer,
             image: product.image,
             quantity: 1,
-            stock: stockQuantity,
+            stock: hasKnownStock ? stockQuantity : undefined,
             rating: product.rating
         });
         if (!addedToCart) return;
@@ -160,6 +167,7 @@ export default function CategoryPageLayout({ title, icon: Icon, products: initia
                                     ...normalizedLocal,
                                     id: backendProd.id, // Use backend ID (1-61) instead of local ID (101+)
                                     price: backendProd.price,
+                                    originalPrice: backendProd.originalPrice,
                                     discountPrice: backendProd.discountPrice,
                                     stock: backendProd.stock,
                                     rating: backendProd.rating,
@@ -218,11 +226,13 @@ export default function CategoryPageLayout({ title, icon: Icon, products: initia
                 return false;
             }
             // 2. Price
-            if (product.price > filters.priceMax) {
+            if (getProductPricing(product).salePrice > filters.priceMax) {
                 return false;
             }
             // 3. Availability
-            const isOutOfStock = Number(product.stock ?? product.quantity ?? 0) <= 0;
+            const stockValue = product.stock ?? product.quantity;
+            const stockQuantity = Number(stockValue);
+            const isOutOfStock = stockValue !== undefined && stockValue !== null && Number.isFinite(stockQuantity) && stockQuantity <= 0;
             if (filters.inStock && !filters.outOfStock && isOutOfStock)
                 return false;
             if (filters.outOfStock && !filters.inStock && !isOutOfStock)
@@ -248,10 +258,10 @@ export default function CategoryPageLayout({ title, icon: Icon, products: initia
         // Apply sorting
         const sorted = [...filtered];
         if (sortBy === 'price-asc') {
-            sorted.sort((a, b) => a.price - b.price);
+            sorted.sort((a, b) => getProductPricing(a).salePrice - getProductPricing(b).salePrice);
         }
         else if (sortBy === 'price-desc') {
-            sorted.sort((a, b) => b.price - a.price);
+            sorted.sort((a, b) => getProductPricing(b).salePrice - getProductPricing(a).salePrice);
         }
         else if (sortBy === 'best-rated') {
             sorted.sort((a, b) => b.rating - a.rating);

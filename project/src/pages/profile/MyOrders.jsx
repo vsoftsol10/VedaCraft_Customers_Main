@@ -86,10 +86,11 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, ChevronRight, Package } from 'lucide-react';
+import { ShoppingBag, ChevronRight, Package, RotateCcw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getOrders, updateOrderStatus } from '../../services/orderStorage';
+import { getOrders, submitReturnRequest, updateOrderStatus } from '../../services/orderStorage';
 import { useTranslation } from 'react-i18next';
+import ReturnRequestModal from '../../components/Orders/ReturnRequestModal';
 
 const statusStyles = {
   Placed: 'text-amber-700 bg-amber-50',
@@ -102,7 +103,7 @@ const statusStyles = {
 };
 
 // Statuses past which an order can no longer be cancelled
-const NON_CANCELLABLE_STATUSES = ['Shipped', 'In Transit', 'Delivered', 'Cancelled'];
+const NON_CANCELLABLE_STATUSES = ['Shipped', 'In Transit', 'Delivered', 'Cancelled', 'Return Requested'];
 
 const RETURN_WINDOW_DAYS = 3;
 
@@ -130,6 +131,8 @@ export default function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [actioningOrderId, setActioningOrderId] = useState(null);
   const [actionError, setActionError] = useState('');
+  const [cancelOrder, setCancelOrder] = useState(null);
+  const [returnOrder, setReturnOrder] = useState(null);
 
   useEffect(() => {
     let isActive = true;
@@ -149,11 +152,13 @@ export default function MyOrders() {
     event.stopPropagation();
     if (NON_CANCELLABLE_STATUSES.includes(order.status)) return;
 
-    const shouldCancel = window.confirm(
-      t('orders.cancelConfirm', 'Are you sure you want to cancel this order?')
-    );
-    if (!shouldCancel) return;
+    setCancelOrder(order);
+  };
 
+  const confirmCancelOrder = async () => {
+    if (!cancelOrder) return;
+    const order = cancelOrder;
+    setCancelOrder(null);
     setActioningOrderId(order.id);
     setActionError('');
     const updatedOrder = await updateOrderStatus(order.id, 'Cancelled', user?.id);
@@ -169,17 +174,18 @@ export default function MyOrders() {
     event.stopPropagation();
     if (!withinReturnWindow) return;
 
-    const shouldReturn = window.confirm(
-      t('orders.returnConfirm', 'Are you sure you want to return this order?')
-    );
-    if (!shouldReturn) return;
+    setReturnOrder(order);
+  };
 
+  const confirmReturnOrder = async (returnRequest) => {
+    if (!returnOrder) return;
+    const order = returnOrder;
     setActioningOrderId(order.id);
     setActionError('');
-    // Adjust the target status to match your workflow, e.g. 'Return Requested'
-    const updatedOrder = await updateOrderStatus(order.id, 'Return Requested', user?.id);
-    if (updatedOrder) {
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? updatedOrder : o)));
+    const result = await submitReturnRequest(order.id, returnRequest, user?.id);
+    if (result?.order) {
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? result.order : o)));
+      setReturnOrder(null);
     } else {
       setActionError(t('orders.returnError', 'Could not process the return. Please try again.'));
     }
@@ -214,7 +220,7 @@ export default function MyOrders() {
               const isBusy = actioningOrderId === order.id;
 
               // Return is only offered on delivered orders, within the return window
-              const elapsedDays = daysSinceDelivery(order.deliveredAt);
+              const elapsedDays = daysSinceDelivery(order.deliveredAt || order.updatedAt || order.createdAt);
               const withinReturnWindow = isDelivered && elapsedDays <= RETURN_WINDOW_DAYS;
               const returnWindowExpired = isDelivered && elapsedDays > RETURN_WINDOW_DAYS;
 
@@ -310,6 +316,59 @@ export default function MyOrders() {
           </div>
         )}
       </div>
+
+      {cancelOrder && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setCancelOrder(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl border border-gray-100"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-order-title"
+          >
+            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-50">
+              <Package className="h-5 w-5 text-red-600" />
+            </div>
+            <h2 id="cancel-order-title" className="text-center text-lg font-bold text-gray-900">
+              {t('orders.cancelOrder', 'Cancel Order')}
+            </h2>
+            <p className="mt-2 text-center text-sm leading-6 text-gray-500">
+              {t('orders.cancelConfirm', 'Are you sure you want to cancel this order?')}
+            </p>
+            <p className="mt-3 text-center text-xs font-medium text-gray-400">
+              {cancelOrder.product}
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setCancelOrder(null)}
+                className="rounded-md border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                {t('orders.keepOrder', 'Keep Order')}
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancelOrder}
+                className="rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+              >
+                {t('orders.cancelOrder', 'Cancel Order')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {returnOrder && (
+        <ReturnRequestModal
+          order={returnOrder}
+          isSubmitting={actioningOrderId === returnOrder.id}
+          onClose={() => setReturnOrder(null)}
+          onSubmit={confirmReturnOrder}
+        />
+      )}
     </div>
   );
 }

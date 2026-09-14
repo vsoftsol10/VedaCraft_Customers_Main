@@ -191,24 +191,24 @@ export default function HelpSupport() {
           </div>
 
           {/* Call Us */}
-          <div className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-100
-                         hover:border-gray-200 hover:shadow-sm cursor-pointer transition-all text-center">
+          <a href="tel:+919095422237" aria-label="Call Vedacraft at +91 90954 22237" className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-100
+                         hover:border-green-300 hover:shadow-sm cursor-pointer transition-all text-center">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-green-600 bg-green-50">
               <Phone className="w-5 h-5"/>
             </div>
             <p className="text-sm font-semibold text-gray-800">Call Us</p>
-            <p className="text-xs text-gray-400">91 9095422237</p>
-          </div>
+            <p className="text-xs text-gray-400">+91 90954 22237</p>
+          </a>
 
           {/* Email */}
-          <div className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-100
-                         hover:border-gray-200 hover:shadow-sm cursor-pointer transition-all text-center">
+          <a href="mailto:vedaconnecttvl@gmail.com?subject=Vedacraft%20Support%20Request" aria-label="Email Vedacraft support" className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-100
+                         hover:border-yellow-300 hover:shadow-sm cursor-pointer transition-all text-center">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-yellow-600 bg-yellow-50">
               <Mail className="w-5 h-5"/>
             </div>
             <p className="text-sm font-semibold text-gray-800">Email</p>
             <p className="text-xs text-gray-400">vedaconnecttvl@gmail.com</p>
-          </div>
+          </a>
         </div>
       </div>
 

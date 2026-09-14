@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   ChevronLeft,
@@ -183,6 +184,7 @@ function StatItem({ icon: Icon, value, label }) {
 --------------------------------------------- */
 
 function Hero() {
+  const navigate = useNavigate();
   return (
     <section
       className="relative w-full overflow-hidden bg-[#F6EEDD]"
@@ -279,7 +281,7 @@ function Hero() {
             </div>
           </div>
 
-          <button className="inline-flex items-center gap-2 bg-[#167321] hover:bg-[#0f5f18] text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm">
+          <button onClick={() => navigate('/seller/onboarding')} className="inline-flex items-center gap-2 bg-[#167321] hover:bg-[#0f5f18] text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm">
             Start Selling Today <ArrowRight size={18} />
           </button>
 
@@ -692,6 +694,7 @@ function HowToSellSection() {
 --------------------------------------------- */
 
 function CtaBanner() {
+  const navigate = useNavigate();
   return (
     <section className="w-full px-4 sm:px-8 pb-16">
       <div className="max-w-6xl mx-auto bg-[#F4F2E9] rounded-2xl px-6 sm:px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -706,7 +709,7 @@ function CtaBanner() {
             </p>
           </div>
         </div>
-        <button className="inline-flex items-center gap-2 bg-[#2F6B3A] hover:bg-[#26592F] text-white text-sm font-semibold px-6 py-3 rounded-full transition-colors whitespace-nowrap">
+        <button onClick={() => navigate('/seller/onboarding')} className="inline-flex items-center gap-2 bg-[#2F6B3A] hover:bg-[#26592F] text-white text-sm font-semibold px-6 py-3 rounded-full transition-colors whitespace-nowrap">
           Start Selling Today <ArrowRight size={16} />
         </button>
       </div>

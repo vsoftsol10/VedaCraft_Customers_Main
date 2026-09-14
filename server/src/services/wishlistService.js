@@ -1,5 +1,6 @@
 import { createScopedClient } from '../config/supabase.js';
 import { AppError } from '../utils/apiResponse.js';
+import { getProductDtosByIds } from './productService.js';
 
 const normalizeProductId = (value) => {
   const productId = String(value ?? '').trim();
@@ -25,15 +26,28 @@ const getProductSnapshot = (product) => {
   };
 };
 
-const mapWishlistRow = (row) => {
+const mapWishlistRow = (row, product) => {
+  const originalPrice = Number(product?.price);
+  const discountPrice = product?.discount_price === null || product?.discount_price === undefined
+    ? null
+    : Number(product.discount_price);
+  const snapshotPrice = Number(row.product_price || 0);
+  const salePrice = Number.isFinite(discountPrice) && discountPrice >= 0
+    ? discountPrice
+    : Number.isFinite(originalPrice)
+      ? originalPrice
+      : snapshotPrice;
+
   return {
     id: String(row.product_id),
-    slug: row.product_slug || undefined,
-    name: row.product_name || 'Product',
-    category: row.product_category || undefined,
-    description: '',
-    price: Number(row.product_price || 0),
-    discount_price: null,
+    slug: product?.slug || row.product_slug || undefined,
+    name: product?.name || row.product_name || 'Product',
+    category: product?.category || row.product_category || undefined,
+    description: product?.description || '',
+    price: Number.isFinite(originalPrice) ? originalPrice : salePrice,
+    originalPrice: Number.isFinite(originalPrice) ? originalPrice : salePrice,
+    discount_price: Number.isFinite(discountPrice) ? discountPrice : null,
+    offer: product?.offer || undefined,
     stock: 1,
     rating: row.product_rating === null || row.product_rating === undefined
       ? 0
@@ -43,8 +57,8 @@ const mapWishlistRow = (row) => {
     is_active: true,
     created_at: row.created_at,
     updated_at: row.created_at,
-    image: row.product_image || '',
-    images: row.product_image ? [row.product_image] : [],
+    image: product?.image || row.product_image || '',
+    images: product?.images?.length ? product.images : row.product_image ? [row.product_image] : [],
   };
 };
 
@@ -68,7 +82,16 @@ export const getWishlist = async (userId, token) => {
 
   if (error) throw new AppError(error.message, 500);
 
-  return (data || []).map(mapWishlistRow);
+  const rows = data || [];
+  let productsById = new Map();
+
+  try {
+    productsById = await getProductDtosByIds(rows.map((item) => item.product_id));
+  } catch (error) {
+    console.warn('Failed to enrich wishlist items with product pricing', error);
+  }
+
+  return rows.map((item) => mapWishlistRow(item, productsById.get(String(item.product_id))));
 };
 
 export const toggleItem = async (userId, product, token) => {

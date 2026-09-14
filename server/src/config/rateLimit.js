@@ -13,8 +13,10 @@ export const rateLimitOptions = {
     status: 429,
     message: 'Too many requests. Please try again later.',
   },
-  skip: (req) => {
-    // Skip rate limiting in test environment
-    return process.env.NODE_ENV === 'test';
+  skip: () => {
+    // Local development reloads several authenticated providers at once.
+    // Keep the shared API limiter for deployed environments; auth routes
+    // retain their own focused protection.
+    return process.env.NODE_ENV !== 'production';
   },
 };

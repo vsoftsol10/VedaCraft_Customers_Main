@@ -280,6 +280,47 @@ export async function updateOrderStatus(orderId, status, userId) {
   }
 }
 
+export async function submitReturnRequest(orderId, returnRequest, userId) {
+  const localOrders = readAllOrders();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/orders/${encodeURIComponent(orderId)}/return-request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(returnRequest),
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || !result.success) {
+      console.error('Failed to submit return request:', result.message || response.statusText);
+      return null;
+    }
+
+    const resolvedUserId = await resolveUserId();
+    const savedOrder = normalizeOrder(result.data.order, resolvedUserId);
+    writeAllOrders([savedOrder, ...localOrders.filter((existing) => existing.id !== orderId)]);
+
+    return {
+      order: savedOrder,
+      returnRequest: result.data.returnRequest,
+    };
+  } catch (error) {
+    console.error('Failed to submit return request:', error);
+    return null;
+  }
+}
+
 export async function saveOrder(order) {
   const localOrders = readAllOrders();
   const nextOrder = {

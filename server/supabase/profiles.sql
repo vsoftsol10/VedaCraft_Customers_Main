@@ -13,6 +13,18 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+-- Size-profile fields used to personalise fashion product recommendations.
+-- `if not exists` keeps this safe for databases where the fields were added earlier.
+alter table public.profiles add column if not exists gender text;
+alter table public.profiles add column if not exists top_size text;
+alter table public.profiles add column if not exists bottom_size text;
+alter table public.profiles add column if not exists measurement_unit text default 'in'
+  check (measurement_unit in ('in', 'cm'));
+alter table public.profiles add column if not exists shoulder numeric;
+alter table public.profiles add column if not exists chest numeric;
+alter table public.profiles add column if not exists waist numeric;
+alter table public.profiles add column if not exists hips numeric;
+
 alter table public.profiles enable row level security;
 
 create policy "Users can read own profile"

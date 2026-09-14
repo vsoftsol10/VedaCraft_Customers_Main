@@ -36,6 +36,7 @@ import CartDrawer from './components/Cart/CartDrawer';
 import ChatbotWidget from './components/Chatbot/ChatbotWidget';
 import { NotificationProvider } from './context/NotificationContext';
 import Seller from './pages/Seller'
+import SellerOnboarding from './pages/SellerOnboarding'
 function ScrollToTop() {
     const { pathname, search } = useLocation();
 
@@ -62,6 +63,7 @@ function App() {
               <Routes>
                 <Route path="/login" element={<LoginPage />}/>
                 <Route path="/profile-completion" element={<ProfileCompletion />}/>
+                <Route path="/seller/onboarding" element={<SellerOnboarding />}/>
                 
                 {/* All main app routes are protected by ProfileGuard */}
                 <Route path="/*" element={<ProfileGuard>

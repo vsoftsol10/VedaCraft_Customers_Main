@@ -220,3 +220,116 @@ export const updateOrderStatus = async (req, res, next) => {
     return next(error);
   }
 };
+
+export const createReturnRequest = async (req, res, next) => {
+  try {
+    const userId = getUserId(req);
+    const orderId = req.params.id;
+    const payload = req.body || {};
+    const reasons = Array.isArray(payload.reasons)
+      ? payload.reasons.filter((reason) => typeof reason === 'string' && reason.trim())
+      : [];
+    const reason = typeof payload.reason === 'string' ? payload.reason.trim() : reasons.join(', ');
+    const returnMethod = payload.returnMethod === 'dropoff' ? 'dropoff' : 'pickup';
+    const issueDescription =
+      typeof payload.issueDescription === 'string' ? payload.issueDescription.trim() : '';
+
+    if (!reason && reasons.length === 0) {
+      return sendError(res, 400, 'Return reason is required');
+    }
+
+    if (!issueDescription) {
+      return sendError(res, 400, 'Issue description is required');
+    }
+
+    if (!supabaseAdmin) {
+      return sendError(res, 503, 'Return requests are unavailable without database access');
+    }
+
+    const { data: order, error: lookupError } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .eq('user_id', userId)
+      .single();
+
+    if (lookupError || !order) {
+      return sendError(res, 404, 'Order not found');
+    }
+
+    if (order.status !== 'Delivered') {
+      return sendError(res, 400, 'Only delivered orders can be returned');
+    }
+
+    const { data: existingRequest, error: existingError } = await supabaseAdmin
+      .from('return_requests')
+      .select('id')
+      .eq('order_id', order.id)
+      .eq('user_id', userId)
+      .neq('status', 'Rejected')
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+
+    if (existingRequest) {
+      return sendError(res, 409, 'A return request already exists for this order');
+    }
+
+    const nowIso = new Date().toISOString();
+    const returnRequestPayload = {
+      order_id: order.id,
+      user_id: userId,
+      status: 'Requested',
+      reasons,
+      reason: reason || reasons.join(', '),
+      return_method: returnMethod,
+      pickup_address: payload.pickupAddress || order.address || null,
+      is_original_condition: Boolean(payload.isOriginalCondition),
+      has_original_packaging: Boolean(payload.hasOriginalPackaging),
+      issue_description: issueDescription,
+      items: Array.isArray(payload.items) ? payload.items : order.items || [],
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+
+    const { data: returnRequest, error: insertError } = await supabaseAdmin
+      .from('return_requests')
+      .insert([returnRequestPayload])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    const { data: updatedOrder, error: updateError } = await supabaseAdmin
+      .from('orders')
+      .update({
+        status: 'Return Requested',
+        updated_at: nowIso,
+      })
+      .eq('id', order.id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    createOrderNotification({
+      userId,
+      orderId: updatedOrder.id,
+      title: 'Return Requested',
+      message: 'Your return request has been submitted.',
+    }).catch((err) => console.error('Notification error:', err));
+
+    return sendSuccess(
+      res,
+      {
+        order: updatedOrder,
+        returnRequest,
+      },
+      'Return request submitted successfully',
+      201
+    );
+  } catch (error) {
+    return next(error);
+  }
+};

@@ -1,17 +1,19 @@
 import { supabaseAdmin, supabase } from '../config/supabase.js';
 
+const ESTIMATED_DELIVERY_DAYS = 7;
+
 // Hardcoded fallback — used when the DB table doesn't exist yet
 const FALLBACK_STATES = {
-  'tamil nadu':      { is_active: true,  estimated_days: 2 },
-  'kerala':          { is_active: true,  estimated_days: 3 },
-  'karnataka':       { is_active: true,  estimated_days: 3 },
-  'andhra pradesh':  { is_active: true,  estimated_days: 4 },
-  'telangana':       { is_active: true,  estimated_days: 4 },
-  'maharashtra':     { is_active: true,  estimated_days: 5 },
-  'delhi':           { is_active: true,  estimated_days: 5 },
-  'gujarat':         { is_active: false, estimated_days: 6 },
-  'west bengal':     { is_active: false, estimated_days: 6 },
-  'rajasthan':       { is_active: false, estimated_days: 6 },
+  'tamil nadu':      { is_active: true,  estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'kerala':          { is_active: true,  estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'karnataka':       { is_active: true,  estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'andhra pradesh':  { is_active: true,  estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'telangana':       { is_active: true,  estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'maharashtra':     { is_active: true,  estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'delhi':           { is_active: true,  estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'gujarat':         { is_active: false, estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'west bengal':     { is_active: false, estimated_days: ESTIMATED_DELIVERY_DAYS },
+  'rajasthan':       { is_active: false, estimated_days: ESTIMATED_DELIVERY_DAYS },
 };
 
 export const checkStateAvailability = async (stateName) => {
@@ -38,7 +40,7 @@ export const checkStateAvailability = async (stateName) => {
 
     return {
       is_active: data.is_active,
-      estimated_days: data.estimated_days,
+      estimated_days: ESTIMATED_DELIVERY_DAYS,
     };
   } catch (err) {
     console.error('[DeliveryService] Error:', err.message);

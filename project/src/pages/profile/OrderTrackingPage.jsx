@@ -321,8 +321,9 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getOrderById, updateOrderStatus } from '../../services/orderStorage';
+import { getOrderById, submitReturnRequest, updateOrderStatus } from '../../services/orderStorage';
 import { useTranslation } from 'react-i18next';
+import ReturnRequestModal from '../../components/Orders/ReturnRequestModal';
 
 const trackingSteps = [
   { labelKey: 'orders.tracking.processing', icon: Check },
@@ -333,6 +334,15 @@ const trackingSteps = [
 ];
 
 const RETURN_WINDOW_DAYS = 3;
+const RETURN_REQUESTED_STATUS = 'Return Requested';
+const NON_CANCELLABLE_STATUSES = [
+  'Shipped',
+  'In Transit',
+  'Out for Delivery',
+  'Delivered',
+  'Cancelled',
+  RETURN_REQUESTED_STATUS,
+];
 
 function formatDisplayDate(date) {
   return new Date(date).toLocaleDateString('en-IN', {
@@ -349,7 +359,7 @@ function addDays(date, days) {
 }
 
 function getActiveStep(status) {
-  if (status === 'Delivered') return 4;
+  if (status === 'Delivered' || status === RETURN_REQUESTED_STATUS) return 4;
   if (status === 'In Transit') return 2;
   if (status === 'Cancelled') return 0;
   return 1;
@@ -373,6 +383,8 @@ export default function OrderTrackingPage() {
   const [cancelError, setCancelError] = useState('');
   const [isReturning, setIsReturning] = useState(false);
   const [returnError, setReturnError] = useState('');
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [showReturnFlow, setShowReturnFlow] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -396,21 +408,24 @@ export default function OrderTrackingPage() {
   const activeStep = useMemo(() => (order ? getActiveStep(order.status) : 0), [order]);
   const expectedDate = order ? addDays(order.createdAt, order.status === 'In Transit' ? 2 : 3) : '';
   const totalQuantity = order?.items.reduce((total, item) => total + item.quantity, 0) ?? 0;
-  const canCancel = order
-    ? !['Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Cancelled'].includes(order.status)
-    : false;
+  const canCancel = order ? !NON_CANCELLABLE_STATUSES.includes(order.status) : false;
 
   // Delivered orders can be returned within RETURN_WINDOW_DAYS of deliveredAt
+  const isReturnRequested = order?.status === RETURN_REQUESTED_STATUS;
   const isDelivered = order?.status === 'Delivered';
-  const elapsedSinceDelivery = isDelivered ? daysSince(order.deliveredAt) : Infinity;
+  const deliveryReferenceDate = order?.deliveredAt || order?.updatedAt || order?.createdAt;
+  const elapsedSinceDelivery = isDelivered ? daysSince(deliveryReferenceDate) : Infinity;
   const withinReturnWindow = isDelivered && elapsedSinceDelivery <= RETURN_WINDOW_DAYS;
   const returnWindowExpired = isDelivered && elapsedSinceDelivery > RETURN_WINDOW_DAYS;
 
   const handleCancelOrder = async () => {
     if (!order || !canCancel) return;
-    const shouldCancel = window.confirm(t('orders.cancelConfirm'));
-    if (!shouldCancel) return;
+    setConfirmAction('cancel');
+  };
 
+  const confirmCancelOrder = async () => {
+    if (!order || !canCancel) return;
+    setConfirmAction(null);
     setIsCancelling(true);
     setCancelError('');
     const updatedOrder = await updateOrderStatus(order.id, 'Cancelled', user?.id);
@@ -424,18 +439,17 @@ export default function OrderTrackingPage() {
 
   const handleReturnOrder = async () => {
     if (!order || !withinReturnWindow) return;
-    const shouldReturn = window.confirm(
-      t('orders.returnConfirm', 'Are you sure you want to return this order?')
-    );
-    if (!shouldReturn) return;
+    setShowReturnFlow(true);
+  };
 
+  const confirmReturnOrder = async (returnRequest) => {
+    if (!order || !withinReturnWindow) return;
     setIsReturning(true);
     setReturnError('');
-    // Adjust target status to match your workflow, e.g. 'Return Requested'
-    // if you want an admin review step before it's finalized.
-    const updatedOrder = await updateOrderStatus(order.id, 'Return Requested', user?.id);
-    if (updatedOrder) {
-      setOrder(updatedOrder);
+    const result = await submitReturnRequest(order.id, returnRequest, user?.id);
+    if (result?.order) {
+      setOrder(result.order);
+      setShowReturnFlow(false);
     } else {
       setReturnError(t('orders.returnError', 'Could not process the return. Please try again.'));
     }
@@ -484,6 +498,8 @@ export default function OrderTrackingPage() {
             className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold ${
               order.status === 'Cancelled'
                 ? 'bg-red-50 text-red-600'
+                : order.status === RETURN_REQUESTED_STATUS
+                ? 'bg-amber-50 text-amber-700'
                 : order.status === 'Delivered'
                 ? 'bg-green-50 text-green-700'
                 : 'bg-yellow-50 text-yellow-700'
@@ -579,16 +595,19 @@ export default function OrderTrackingPage() {
             style={{ width: `${Math.min(activeStep / (trackingSteps.length - 1), 1) * 80}%` }}
           />
           {trackingSteps.map((step, index) => {
-            const isCompleted = index < activeStep || (index === activeStep && order.status === 'Delivered');
-            const isCurrent = index === activeStep && order.status !== 'Delivered';
+            const isCompleted =
+              index < activeStep ||
+              (index === activeStep && (order.status === 'Delivered' || order.status === RETURN_REQUESTED_STATUS));
+            const isCurrent =
+              index === activeStep && order.status !== 'Delivered' && order.status !== RETURN_REQUESTED_STATUS;
             const isActive = index <= activeStep;
             const Icon = isCompleted ? Check : step.icon;
 
             const stepDate = new Date(order.createdAt);
-            if (index === 4 && order.status === 'Delivered' && order.deliveredAt) {
+            if (index === 4 && (order.status === 'Delivered' || order.status === RETURN_REQUESTED_STATUS) && order.deliveredAt) {
               // Use actual delivery timestamp for the final step
               stepDate.setTime(new Date(order.deliveredAt).getTime());
-            } else if (index === 4 && order.status === 'Delivered' && order.updatedAt) {
+            } else if (index === 4 && (order.status === 'Delivered' || order.status === RETURN_REQUESTED_STATUS) && order.updatedAt) {
               // Fallback for orders delivered before deliveredAt existed
               stepDate.setTime(new Date(order.updatedAt).getTime());
             } else {
@@ -646,7 +665,11 @@ export default function OrderTrackingPage() {
 
       <div
         className={`rounded-lg p-4 mb-5 ${
-          order.status === 'Cancelled' ? 'border border-red-100 bg-red-50' : 'border border-yellow-200 bg-yellow-50/30'
+          order.status === 'Cancelled'
+            ? 'border border-red-100 bg-red-50'
+            : isReturnRequested
+            ? 'border border-amber-200 bg-amber-50/40'
+            : 'border border-yellow-200 bg-yellow-50/30'
         }`}
       >
         {order.status === 'Cancelled' ? (
@@ -655,6 +678,18 @@ export default function OrderTrackingPage() {
             <div>
               <p className="text-sm font-bold text-red-600">{t('orders.cancelledMessage')}</p>
               <p className="text-xs text-gray-600 mt-1">{t('orders.cancelledDesc')}</p>
+            </div>
+          </div>
+        ) : isReturnRequested ? (
+          <div className="flex items-start gap-3">
+            <RotateCcw className="w-7 h-7 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-amber-700">
+                {t('orders.returnRequestedMessage', 'Return requested')}
+              </p>
+              <p className="text-xs text-gray-600 mt-1">
+                {t('orders.returnRequestedDesc', 'Your return request has been submitted and is waiting for review.')}
+              </p>
             </div>
           </div>
         ) : order.status === 'Delivered' ? (
@@ -771,6 +806,59 @@ export default function OrderTrackingPage() {
           </div>
         </div>
       </section>
+
+      {showReturnFlow && (
+        <ReturnRequestModal
+          order={order}
+          isSubmitting={isReturning}
+          onClose={() => setShowReturnFlow(false)}
+          onSubmit={confirmReturnOrder}
+        />
+      )}
+
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setConfirmAction(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl border border-gray-100 bg-white p-5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-action-title"
+          >
+            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-50">
+              <XCircle className="h-5 w-5 text-red-600" />
+            </div>
+            <h2 id="order-action-title" className="text-center text-lg font-bold text-gray-900">
+              {t('orders.cancelOrder', 'Cancel Order')}
+            </h2>
+            <p className="mt-2 text-center text-sm leading-6 text-gray-500">
+              {t('orders.cancelConfirm', 'Are you sure you want to cancel this order?')}
+            </p>
+            <p className="mt-3 text-center text-xs font-medium text-gray-400">
+              {order.product || order.id}
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmAction(null)}
+                className="rounded-md border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                {t('orders.keepOrder', 'Keep Order')}
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancelOrder}
+                className="rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+              >
+                {t('orders.cancelOrder', 'Cancel Order')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

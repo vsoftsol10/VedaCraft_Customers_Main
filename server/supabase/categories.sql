@@ -8,9 +8,15 @@ CREATE TABLE IF NOT EXISTS public.categories (
   name        TEXT NOT NULL,
   slug        TEXT NOT NULL UNIQUE,
   image_url   TEXT,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  is_active   BOOLEAN NOT NULL DEFAULT true,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+-- Safe when the table was created by an earlier version of this script.
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS display_order INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
 
 CREATE OR REPLACE FUNCTION public.set_categories_updated_at()
 RETURNS TRIGGER AS $$
@@ -27,6 +33,8 @@ CREATE TRIGGER categories_set_updated_at
 
 CREATE INDEX IF NOT EXISTS idx_categories_slug
   ON public.categories (slug);
+CREATE INDEX IF NOT EXISTS idx_categories_visible
+  ON public.categories (is_active, display_order);
 
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
@@ -38,18 +46,9 @@ USING (true);
 GRANT SELECT ON public.categories TO anon, authenticated;
 GRANT ALL ON public.categories TO service_role;
 
-INSERT INTO public.categories (name, slug, image_url)
-VALUES
-  ('Eco', 'eco', '/assets/categories/eco.jpeg'),
-  ('Wellness', 'wellness', '/assets/categories/wellness.jpeg'),
-  ('Food', 'food', '/assets/categories/food.jpeg'),
-  ('Craft', 'craft', '/assets/categories/craft.jpeg'),
-  ('Fashion', 'fashion', '/assets/categories/fashion.jpeg'),
-  ('Decor Items', 'decor', '/assets/categories/decor-items.jpeg')
-ON CONFLICT (slug) DO UPDATE
-SET name = EXCLUDED.name,
-    image_url = EXCLUDED.image_url,
-    updated_at = timezone('utc'::text, now());
-
--- Verify: should return 6
-SELECT COUNT(*) AS total_categories FROM public.categories;
+-- Add categories from Supabase Dashboard > Table Editor, or run statements like:
+-- INSERT INTO public.categories (name, slug, image_url, display_order)
+-- VALUES ('Eco', 'eco', 'https://YOUR_PROJECT.supabase.co/storage/v1/object/public/category-images/eco.jpg', 1);
+--
+-- `image_url` must be a public URL. Create a separate public `category-images`
+-- bucket for category thumbnails; do not use the private seller-document bucket.

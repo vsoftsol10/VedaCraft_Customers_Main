@@ -6,6 +6,7 @@ const NotificationContext = createContext(undefined);
 
 export function NotificationProvider({ children }) {
   const { user, accessToken, authReady, logout } = useAuth();
+  const userId = user?.id ?? null;
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -13,7 +14,7 @@ export function NotificationProvider({ children }) {
   const load = useCallback(async () => {
     if (!authReady) return;
 
-    if (!user || !accessToken) {
+    if (!userId || !accessToken) {
       setNotifications([]);
       setError('');
       return;
@@ -35,7 +36,7 @@ export function NotificationProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, authReady, logout, user]);
+  }, [accessToken, authReady, logout, userId]);
 
   useEffect(() => {
     let mounted = true;
@@ -51,14 +52,14 @@ export function NotificationProvider({ children }) {
   }, [load]);
 
   useEffect(() => {
-    if (!authReady || !user || !accessToken) return undefined;
+    if (!authReady || !userId || !accessToken) return undefined;
 
     const intervalId = window.setInterval(() => {
       void load();
     }, 60000);
 
     return () => window.clearInterval(intervalId);
-  }, [accessToken, authReady, load, user]);
+  }, [accessToken, authReady, load, userId]);
 
   const markAsRead = async (id) => {
     if (!user || !accessToken) return;

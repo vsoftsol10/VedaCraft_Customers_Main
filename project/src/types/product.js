@@ -2,6 +2,8 @@ export const mapApiProductToProduct = (apiProduct) => {
     const images = Array.isArray(apiProduct.images) ? apiProduct.images : [];
     const firstImage = apiProduct.image || images[0] || '';
     const specs = apiProduct.specifications || {};
+    const price = Number(apiProduct.price || 0);
+    const discountPrice = apiProduct.discountPrice ?? apiProduct.discount_price;
     return {
         id: apiProduct.id,
         name: apiProduct.name,
@@ -9,8 +11,9 @@ export const mapApiProductToProduct = (apiProduct) => {
         description: apiProduct.description,
         category: apiProduct.category,
         brand: apiProduct.brand,
-        price: apiProduct.price,
-        discountPrice: apiProduct.discount_price,
+        price,
+        originalPrice: Number(apiProduct.originalPrice ?? price),
+        discountPrice: discountPrice === null || discountPrice === undefined ? null : Number(discountPrice),
         stock: apiProduct.stock ?? apiProduct.quantity ?? 0,
         quantity: apiProduct.quantity ?? apiProduct.stock ?? 0,
         images,
@@ -39,9 +42,10 @@ export const mapLocalProductToProduct = (localProduct) => {
         category: localProduct.category,
         brand: '',
         price: localProduct.price,
+        originalPrice: localProduct.price,
         discountPrice: null,
-        stock: 0,
-        quantity: 0,
+        stock: undefined,
+        quantity: undefined,
         images: [localProduct.image],
         image: localProduct.image,
         rating: localProduct.rating,

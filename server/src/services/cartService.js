@@ -1,6 +1,7 @@
 import { createScopedClient } from '../config/supabase.js';
 import { AppError } from '../utils/apiResponse.js';
-import { assertStockAvailable } from './inventoryService.js';
+import { assertStockAvailable, getStockByProductIds } from './inventoryService.js';
+import { getProductDtosByIds } from './productService.js';
 
 const normalizeProductId = (value) => {
   const productId = String(value ?? '').trim();
@@ -62,15 +63,30 @@ const getOrCreateCart = async (userId, token) => {
   return created.id;
 };
 
-const mapCartRow = (row) => {
+const mapCartRow = (row, stock, product) => {
+  const originalPrice = Number(product?.price);
+  const discountPrice = product?.discount_price === null || product?.discount_price === undefined
+    ? null
+    : Number(product.discount_price);
+  const snapshotPrice = Number(row.product_price || 0);
+  const salePrice = Number.isFinite(discountPrice) && discountPrice >= 0
+    ? discountPrice
+    : Number.isFinite(originalPrice)
+      ? originalPrice
+      : snapshotPrice;
+
   return {
     id: String(row.product_id),
-    slug: row.product_slug || undefined,
-    name: row.product_name || 'Product',
-    category: row.product_category || undefined,
-    price: Number(row.product_price || 0),
-    image: row.product_image || '',
+    slug: product?.slug || row.product_slug || undefined,
+    name: product?.name || row.product_name || 'Product',
+    category: product?.category || row.product_category || undefined,
+    price: salePrice,
+    originalPrice: Number.isFinite(originalPrice) ? originalPrice : salePrice,
+    discountPrice: Number.isFinite(discountPrice) ? discountPrice : undefined,
+    offer: product?.offer || undefined,
+    image: product?.image || row.product_image || '',
     quantity: row.quantity,
+    stock,
     rating: row.product_rating === null || row.product_rating === undefined
       ? undefined
       : Number(row.product_rating),
@@ -108,7 +124,23 @@ export const getCart = async (userId, token) => {
 
   if (error) throw new AppError(error.message, 500);
 
-  return (data || []).map(mapCartRow).filter((item) => item.id);
+  const cartRows = data || [];
+  const stockByProductId = await getStockByProductIds(cartRows.map((item) => item.product_id));
+  let productsById = new Map();
+
+  try {
+    productsById = await getProductDtosByIds(cartRows.map((item) => item.product_id));
+  } catch (error) {
+    console.warn('Failed to enrich cart items with product pricing', error);
+  }
+
+  return cartRows
+    .map((item) => mapCartRow(
+      item,
+      stockByProductId.get(String(item.product_id)),
+      productsById.get(String(item.product_id))
+    ))
+    .filter((item) => item.id);
 };
 
 export const addItem = async (userId, item, token) => {

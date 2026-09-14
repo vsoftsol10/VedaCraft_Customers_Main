@@ -3,8 +3,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { allProducts } from '../../data/allProducts';
+import { searchProducts } from '../../services/productApi';
 import { fetchRecentSearches, saveRecentSearch, deleteRecentSearch, clearRecentSearches, } from '../../services/recentSearchApi';
 import { useAuth } from '../../context/AuthContext';
+import { mapApiProductToProduct, mapLocalProductToProduct } from '../../types/product';
 // Helper to get description keywords for searching product descriptions
 const getProductDescriptionKeywords = (p) => {
     if (p.mainCategory.toLowerCase() === 'eco') {
@@ -41,6 +43,8 @@ export default function SearchBar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [voiceState, setVoiceState] = useState('idle');
     const [voiceError, setVoiceError] = useState(null);
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
     // In-memory only — no localStorage. For logged-in users, synced with backend.
     const [recentSearches, setRecentSearches] = useState([]);
     const dropdownRef = useRef(null);
@@ -82,8 +86,11 @@ export default function SearchBar() {
         loadRecentSearches();
         setIsDropdownOpen(true);
     };
-    const handleProductClick = (productId) => {
-        navigate(`/product/${productId}`);
+    const handleProductClick = (product) => {
+        const productRouteId = product.slug || product.id;
+        if (!productRouteId)
+            return;
+        navigate(`/product/${encodeURIComponent(productRouteId)}`);
         setQuery('');
         setIsDropdownOpen(false);
     };
@@ -118,17 +125,55 @@ export default function SearchBar() {
         persistRecentSearch(term);
         navigate(`/search?q=${encodeURIComponent(term)}`);
     };
-    // Perform search matching
-    const filteredProducts = query.trim() === ''
-        ? []
-        : allProducts.filter(p => {
-            const lowerQuery = query.toLowerCase();
+    const getLocalResults = (term) => {
+        const lowerQuery = term.toLowerCase();
+        return allProducts.filter(p => {
             const descKeywords = getProductDescriptionKeywords(p);
             return (p.name.toLowerCase().includes(lowerQuery) ||
                 p.category.toLowerCase().includes(lowerQuery) ||
                 p.mainCategory.toLowerCase().includes(lowerQuery) ||
                 descKeywords.toLowerCase().includes(lowerQuery));
-        });
+        }).slice(0, 8).map(mapLocalProductToProduct);
+    };
+    useEffect(() => {
+        const term = query.trim();
+        let mounted = true;
+
+        if (!term) {
+            setSearchResults([]);
+            setIsSearching(false);
+            return () => {
+                mounted = false;
+            };
+        }
+
+        setSearchResults(getLocalResults(term));
+        setIsSearching(true);
+
+        const timer = window.setTimeout(() => {
+            searchProducts(term, { limit: 8 })
+                .then((response) => {
+                    if (!mounted)
+                        return;
+                    const mapped = (response.products || []).map((product) => mapApiProductToProduct(product));
+                    setSearchResults(mapped.length > 0 ? mapped : getLocalResults(term));
+                })
+                .catch((error) => {
+                    console.warn('Header product search failed, using local results:', error);
+                    if (mounted)
+                        setSearchResults(getLocalResults(term));
+                })
+                .finally(() => {
+                    if (mounted)
+                        setIsSearching(false);
+                });
+        }, 180);
+
+        return () => {
+            mounted = false;
+            window.clearTimeout(timer);
+        };
+    }, [query]);
     // Start Voice Speech Recognition
     const toggleVoiceSearch = () => {
         if (voiceState === 'listening') {
@@ -267,8 +312,8 @@ export default function SearchBar() {
 
       {/* Search Results Dropdown */}
       {showProductResults && (<div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden z-50">
-          {filteredProducts.length > 0 ? (<ul className="max-h-96 overflow-y-auto">
-              {filteredProducts.map(product => (<li key={product.id} onClick={() => handleProductClick(product.id)} className="flex items-center gap-4 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors">
+          {searchResults.length > 0 ? (<ul className="max-h-96 overflow-y-auto">
+              {searchResults.map(product => (<li key={product.id} onClick={() => handleProductClick(product)} className="flex items-center gap-4 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors">
                   <img src={product.image} alt={t(`productsData.${product.name}`, product.name)} className="w-12 h-12 object-cover object-top rounded-md border border-gray-200"/>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{t(`productsData.${product.name}`, product.name)}</p>
@@ -280,7 +325,9 @@ export default function SearchBar() {
                   </div>
 
                 </li>))}
-            </ul>) : (<div className="p-4 text-center text-gray-500 text-sm">
+            </ul>) : isSearching ? (<div className="p-4 text-center text-gray-500 text-sm">
+              Searching...
+            </div>) : (<div className="p-4 text-center text-gray-500 text-sm">
               {t('search.noResults')} "{query}"
             </div>)}
         </div>)}

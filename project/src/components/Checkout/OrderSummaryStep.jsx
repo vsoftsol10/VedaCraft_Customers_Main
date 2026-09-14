@@ -1,17 +1,18 @@
-import { Star, Truck, MapPin } from 'lucide-react';
+import { Star, Truck, MapPin, Minus, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../../context/CartContext';
-// Generate a mock delivery date 5-7 days from now
+import { getProductPricing } from '../../utils/pricing';
+// Generate the standard delivery date: seven calendar days from today.
 function getDeliveryDate() {
     const d = new Date();
-    d.setDate(d.getDate() + 5 + Math.floor(Math.random() * 3));
+    d.setDate(d.getDate() + 7);
     return d.toLocaleDateString('en-IN', {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
     });
 }
-export default function OrderSummaryStep({ selectedAddress, items, onChangeAddress, onContinue, isBuyNow, }) {
+export default function OrderSummaryStep({ selectedAddress, items, onChangeAddress, onContinue, isBuyNow, onUpdateBuyNowQuantity, }) {
     const { t } = useTranslation();
     const { updateQuantity, removeFromCart } = useCart();
     const deliveryDate = getDeliveryDate();
@@ -41,8 +42,22 @@ export default function OrderSummaryStep({ selectedAddress, items, onChangeAddre
 
       {/* Product Items */}
       {items.map((item) => {
-            const originalPrice = Math.round(item.price * 2);
-            const discountPercent = Math.round(((originalPrice - item.price) / originalPrice) * 100);
+            const pricing = getProductPricing(item);
+            const stock = Number(item.stock);
+            const hasKnownStock = item.stock !== undefined && item.stock !== null && Number.isFinite(stock);
+            const isAtMinimum = item.quantity <= 1;
+            const isAtStockLimit = hasKnownStock && item.quantity >= stock;
+            const changeQuantity = (nextQuantity) => {
+                if (nextQuantity < 1)
+                    return;
+                if (hasKnownStock && nextQuantity > stock)
+                    return;
+                if (isBuyNow) {
+                    onUpdateBuyNowQuantity?.(nextQuantity);
+                    return;
+                }
+                updateQuantity(item.id, nextQuantity);
+            };
             return (<div key={item.id} className="bg-white border border-gray-200 p-5 transition-all duration-200 hover:shadow-sm">
             <div className="flex gap-4">
               {/* Product Image */}
@@ -64,38 +79,37 @@ export default function OrderSummaryStep({ selectedAddress, items, onChangeAddre
                     </div>
                   </div>)}
 
-                {/* Quantity Selector */}
+                {/* Quantity */}
                 <div className="flex items-center gap-2 mb-3">
-                  <label htmlFor={`qty-${item.id}`} className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500">
                     Qty:
-                  </label>
-                  <select id={`qty-${item.id}`} value={item.quantity} onChange={(e) => {
-                    const newQty = parseInt(e.target.value);
-                    if (newQty === 0) {
-                        if (!isBuyNow)
-                            removeFromCart(item.id);
-                    }
-                    else {
-                        if (!isBuyNow)
-                            updateQuantity(item.id, newQty);
-                    }
-                }} disabled={isBuyNow} className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:border-green-500 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (<option key={num} value={num}>
-                        {num}
-                      </option>))}
-                  </select>
+                  </span>
+                  <div className="inline-flex h-8 items-center overflow-hidden rounded-md border border-gray-300 bg-white">
+                    <button type="button" disabled={isAtMinimum} onClick={() => changeQuantity(item.quantity - 1)} className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300">
+                      <Minus className="h-3.5 w-3.5"/>
+                    </button>
+                    <span className="min-w-9 border-x border-gray-200 px-3 text-center text-sm font-semibold text-gray-900">
+                      {item.quantity}
+                    </span>
+                    <button type="button" disabled={isAtStockLimit} onClick={() => changeQuantity(item.quantity + 1)} className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300">
+                      <Plus className="h-3.5 w-3.5"/>
+                    </button>
+                  </div>
+                  {!isBuyNow && isAtMinimum && (<button type="button" onClick={() => removeFromCart(item.id)} className="text-xs font-semibold text-red-500 hover:text-red-600">
+                    Remove
+                  </button>)}
                 </div>
 
                 {/* Price */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-green-700 font-bold text-sm">
-                    ↓{discountPercent}%
-                  </span>
-                  <span className="text-gray-400 line-through text-xs">
-                    &#8377;{originalPrice.toLocaleString('en-IN')}
-                  </span>
+                  {pricing.hasDiscount && (<span className="text-green-700 font-bold text-sm">
+                    ↓{pricing.discountPercent}%
+                  </span>)}
+                  {pricing.hasDiscount && (<span className="text-gray-400 line-through text-xs">
+                    &#8377;{pricing.mrp.toLocaleString('en-IN')}
+                  </span>)}
                   <span className="font-bold text-gray-900 text-base">
-                    &#8377;{(item.price * item.quantity).toLocaleString('en-IN')}
+                    &#8377;{(pricing.salePrice * item.quantity).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>

@@ -11,6 +11,7 @@ create table if not exists public.orders (
   product text not null default 'Vedha Craft Order',
   items jsonb not null default '[]'::jsonb,
   address jsonb,
+  delivered_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -37,6 +38,7 @@ END $$;
 
 ALTER TABLE public.orders ALTER COLUMN user_id TYPE text USING user_id::text;
 ALTER TABLE public.orders ALTER COLUMN user_id SET DEFAULT 'guest';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivered_at timestamptz;
 
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 

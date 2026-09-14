@@ -7,9 +7,70 @@ import ReviewCard from '../components/Products/ReviewCard';
 import ProductSection from '../components/Products/ProductSection';
 import WishlistButton from '../components/Products/WishlistButton';
 import { useCart } from '../context/CartContext';
-import { getProductBySlug, getProductDetails, getProductsByCategory } from '../services/productApi';
+import { useAuth } from '../context/AuthContext';
+import { getProductBySlug, getProductDetails, getProductsByCategory, searchProducts } from '../services/productApi';
 import { mapApiProductToProduct } from '../types/product';
 import { allProducts } from '../data/allProducts';
+import { getProductPricing } from '../utils/pricing';
+const toSlug = (value) => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+const toSearchKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+const findLocalProductForRoute = (routeId) => {
+    const normalizedRoute = String(routeId || '');
+    return allProducts.find((item) => String(item.id) === normalizedRoute || toSlug(item.slug || item.name) === normalizedRoute);
+};
+const getFashionSizeRecommendation = (product, user) => {
+    const isFashion = String(product?.category_slug || product?.mainCategory || '').toLowerCase() === 'fashion';
+    if (!isFashion)
+        return null;
+
+    const productName = `${product?.name || ''} ${product?.category || ''}`.toLowerCase();
+    const isBottom = /(pant|trouser|jean|bottom|legging|short|skirt)/.test(productName);
+    const isTop = /(kurti|shirt|t-shirt|tshirt|tee|top|blouse|jacket|dress)/.test(productName);
+    if (!isTop && !isBottom)
+        return null;
+
+    const size = isBottom ? user?.bottom_size : user?.top_size;
+    const label = isBottom ? 'bottom' : 'top';
+    const measurementKeys = isBottom ? ['waist', 'hips'] : ['shoulder', 'chest'];
+    const unit = user?.measurement_unit === 'cm' ? 'cm' : 'in';
+    const measurements = measurementKeys
+        .map((key) => ({ key, value: user?.[key] }))
+        .filter(({ value }) => value !== '' && value !== null && value !== undefined && Number.isFinite(Number(value)));
+
+    return { size: String(size || '').trim(), label, unit, measurements };
+};
+const resolveProductFromRoute = async (routeId) => {
+    try {
+        return await getProductBySlug(routeId);
+    }
+    catch (error) {
+        const localProduct = findLocalProductForRoute(routeId);
+        const searchTerm = localProduct?.name || String(routeId || '').replace(/-/g, ' ');
+        const response = await searchProducts(searchTerm, { limit: 100 });
+        const products = response.products || [];
+        if (products.length === 0) {
+            throw error;
+        }
+        if (!localProduct) {
+            return products[0];
+        }
+        const localNameKey = toSearchKey(localProduct.name);
+        const localSlugKey = toSearchKey(localProduct.slug || localProduct.name);
+        return products.find((product) => {
+            const nameKey = toSearchKey(product.name);
+            const slugKey = toSearchKey(product.slug);
+            return nameKey === localNameKey ||
+                slugKey === localSlugKey ||
+                nameKey.includes(localNameKey) ||
+                localNameKey.includes(nameKey) ||
+                slugKey.includes(localSlugKey);
+        }) || products[0];
+    }
+};
 function getProductContent(category, productName) {
     const contentMap = {
         // ── Eco Products ──
@@ -425,6 +486,7 @@ export default function ProductDetailsPage() {
     const { id } = useParams();
     const { t } = useTranslation();
     const { addToCart } = useCart();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [productDetail, setProductDetail] = useState(null);
@@ -434,6 +496,9 @@ export default function ProductDetailsPage() {
     const [quantity, setQuantity] = useState(1);
     const [pincode, setPincode] = useState('');
     const [deliveryChecked, setDeliveryChecked] = useState(false);
+    const [pincodeStatus, setPincodeStatus] = useState({ type: '', message: '' });
+    const [checkingPincode, setCheckingPincode] = useState(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const fallbackContent = product ? getProductContent(product.category, product.name) : null;
     const tabDescription = productDetail?.full_description || fallbackContent?.description || '';
     const tabHowToUse = productDetail?.how_to_use || fallbackContent?.howToUse || '';
@@ -452,10 +517,11 @@ export default function ProductDetailsPage() {
         setLoading(true);
         const load = async () => {
             try {
-                const backendProduct = await getProductBySlug(id);
+                const backendProduct = await resolveProductFromRoute(id);
                 const mapped = mapApiProductToProduct(backendProduct);
                 const localProduct = allProducts.find((item) =>
-                    item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === mapped.slug
+                    toSearchKey(item.name) === toSearchKey(mapped.name) ||
+                    toSearchKey(mapped.slug).includes(toSearchKey(item.name))
                 );
                 const productWithImageFallback = mapped.image || !localProduct?.image
                     ? mapped
@@ -509,13 +575,33 @@ export default function ProductDetailsPage() {
         load();
         return () => { mounted = false; };
     }, [id]);
-    const handleApplyPincode = () => {
-        if (pincode.trim().length === 6 && /^\d{6}$/.test(pincode.trim())) {
-            setDeliveryChecked(true);
+    const handleApplyPincode = async () => {
+        const pin = pincode.trim();
+        setDeliveryChecked(false);
+        if (!/^[1-9]\d{5}$/.test(pin)) {
+            setPincodeStatus({ type: 'error', message: 'Enter a valid 6-digit Indian PIN code.' });
+            return;
         }
-        else {
-            setDeliveryChecked(false);
-            alert('Please enter a valid 6-digit pincode.');
+
+        setCheckingPincode(true);
+        setPincodeStatus({ type: '', message: '' });
+        try {
+            const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+            if (!response.ok) throw new Error('PIN service is unavailable');
+            const result = await response.json();
+            const postOffice = result?.[0]?.PostOffice?.[0];
+            if (result?.[0]?.Status !== 'Success' || !postOffice) {
+                setPincodeStatus({ type: 'error', message: 'This PIN code was not found. Please check and try again.' });
+                return;
+            }
+            setDeliveryChecked(true);
+            setPincodeStatus({ type: 'success', message: `Delivery available in ${postOffice.District}, ${postOffice.State}.` });
+        }
+        catch {
+            setPincodeStatus({ type: 'error', message: 'Could not verify this PIN code right now. Please try again.' });
+        }
+        finally {
+            setCheckingPincode(false);
         }
     };
     const handleShare = async () => {
@@ -543,10 +629,10 @@ export default function ProductDetailsPage() {
             }
         }
     };
-    // Compute estimated delivery date (3 days from today)
+    // Compute the standard delivery date: seven calendar days from today.
     const deliveryDate = (() => {
         const d = new Date();
-        d.setDate(d.getDate() + 3);
+        d.setDate(d.getDate() + 7);
         return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
     })();
     useEffect(() => {
@@ -554,6 +640,7 @@ export default function ProductDetailsPage() {
             return;
         const stockQuantity = Number(product.quantity ?? product.stock ?? 0);
         setQuantity((currentQuantity) => stockQuantity > 0 ? Math.min(currentQuantity, stockQuantity) : 1);
+        setSelectedImageIndex(0);
     }, [product?.id, product?.quantity, product?.stock]);
     if (loading) {
         return (<div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800">
@@ -572,10 +659,13 @@ export default function ProductDetailsPage() {
       </div>);
     }
     const productImages = product.images?.filter(Boolean) || [];
-    const primaryImage = productImages[0] || product.image;
-    const displayPrice = product.discountPrice || product.price;
+    const galleryImages = productImages.length > 0 ? productImages : [product.image].filter(Boolean);
+    const primaryImage = galleryImages[selectedImageIndex] || galleryImages[0] || product.image;
+    const pricing = getProductPricing(product);
+    const displayPrice = pricing.salePrice;
     const stockQuantity = Number(product.quantity ?? product.stock ?? 0);
     const isOutOfStock = stockQuantity <= 0;
+    const sizeRecommendation = getFashionSizeRecommendation(product, user);
     return (<div className="bg-white min-h-screen pt-4 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -594,18 +684,22 @@ export default function ProductDetailsPage() {
           {/* Image Gallery */}
           <div className="flex flex-col-reverse gap-4 sm:flex-row">
             <div className="flex flex-row gap-2 overflow-x-auto pb-1 sm:w-20 sm:flex-col sm:overflow-visible sm:pb-0 flex-shrink-0 scrollbar-hide">
-              {[1, 2, 3, 4].map((item) => (<div key={item} className="bg-white border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:border-green-500">
-                   <img src={productImages[item - 1] || primaryImage} alt="thumbnail" className="h-16 w-16 object-cover sm:h-auto sm:w-full"/>
-                </div>))}
+              {[0, 1, 2, 3].map((index) => {
+                const thumbnailImage = galleryImages[index] || galleryImages[0] || product.image;
+                const isSelected = index === selectedImageIndex;
+                return (<button key={index} type="button" onClick={() => setSelectedImageIndex(index)} className={`bg-white border rounded-md overflow-hidden cursor-pointer transition-colors ${isSelected ? 'border-green-600 ring-2 ring-green-100' : 'border-gray-200 hover:border-green-500'}`} aria-label={`Show product image ${index + 1}`}>
+                   <img src={thumbnailImage} alt={`${t(`productsData.${product.name}`, product.name)} thumbnail ${index + 1}`} className="h-16 w-16 object-cover sm:h-auto sm:w-full"/>
+                </button>);
+              })}
             </div>
-            <div className="flex-1 flex items-start justify-center relative group">
+            <div className="flex-1 flex items-start justify-center relative">
                <img src={primaryImage} alt={t(`productsData.${product.name}`, product.name)} className="w-full h-auto rounded-xl object-contain shadow-sm border border-gray-100"/>
                {isOutOfStock && (<div className="absolute left-4 top-4 rounded bg-red-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm">
                  Out of stock
                </div>)}
                
                {/* Floating Action Group */}
-               <div className="absolute top-4 right-4 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+               <div className="absolute top-4 right-4 z-10 flex flex-col gap-3">
                  <WishlistButton product={product}/>
                  <button onClick={handleShare} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center transition-all duration-200 hover:scale-110 text-gray-400 hover:text-green-600" aria-label="Share product">
                    <Share2 className="w-4 h-4"/>
@@ -633,12 +727,12 @@ export default function ProductDetailsPage() {
             {/* Price */}
             <div className="flex flex-wrap items-end gap-3 mb-6">
               <span className="text-3xl font-bold text-gray-900">&#8377; {displayPrice}</span>
-              {product.discountPrice && (<span className="text-lg text-gray-400 line-through mb-1">&#8377; {product.price}</span>)}
+              {pricing.hasDiscount && (<span className="text-lg text-gray-400 line-through mb-1">&#8377; {pricing.mrp}</span>)}
               {product.offer && (<span className="text-sm text-green-600 font-semibold mb-1.5">{product.offer}</span>)}
             </div>
-            <p className={`mb-4 text-sm font-semibold ${isOutOfStock ? 'text-red-600' : 'text-green-700'}`}>
+            {/* <p className={`mb-4 text-sm font-semibold ${isOutOfStock ? 'text-red-600' : 'text-green-700'}`}>
               {isOutOfStock ? 'Out of stock' : `${stockQuantity} in stock`}
-            </p>
+            </p> */}
 
             {/* Quantity
             <div className={`flex items-center border rounded-md w-fit mb-8 ${isOutOfStock ? 'border-gray-200 bg-gray-100 text-gray-400' : 'border-gray-300'}`}>
@@ -654,19 +748,26 @@ export default function ProductDetailsPage() {
             </div> */}
 
             {/* Size Recommendation for Fashion */}
-            {product.category_slug === 'fashion' && ['Cotton Apparel', 'Linen Wear'].includes(product.category) && (<div className="mb-8 bg-[#fdf8f4] border border-[#f9eadf] rounded-xl p-4 flex items-start gap-4">
+            {sizeRecommendation && (<div className="mb-8 bg-[#fdf8f4] border border-[#f9eadf] rounded-xl p-4 flex items-start gap-4">
                 <div className="bg-orange-100 p-2.5 rounded-full text-orange-600 flex-shrink-0">
                   <Shirt className="w-5 h-5"/>
                 </div>
                 <div>
                   <h4 className="font-bold text-orange-900 text-sm flex items-center gap-1.5">
-                    ✨ Recommended Size: M
+                    {sizeRecommendation.size ? `Recommended ${sizeRecommendation.label} size: ${sizeRecommendation.size}` : 'Find your best fit'}
                   </h4>
                   <p className="text-orange-800/80 text-xs mt-1 leading-relaxed">
-                    Based on your saved profile measurements, Size M fits you perfectly for this item.
+                    {sizeRecommendation.size
+                        ? `Based on your saved size profile${user?.gender ? ` for ${user.gender}` : ''}, this is the best match for this item.`
+                        : 'Save your standard size and measurements to receive a personalised recommendation.'}
                   </p>
+                  {sizeRecommendation.measurements.length > 0 && (<div className="mt-2 flex flex-wrap gap-2 text-xs text-orange-900">
+                    {sizeRecommendation.measurements.map(({ key, value }) => (<span key={key} className="rounded-full bg-orange-100 px-2 py-1 capitalize">
+                      {key === 'chest' ? 'Chest / Bust' : key}: {value} {sizeRecommendation.unit}
+                    </span>))}
+                  </div>)}
                   <Link to="/profile/size-profile" className="text-orange-600 text-xs font-semibold mt-2 inline-block hover:underline">
-                    Edit Measurements
+                    {sizeRecommendation.size ? 'Edit size profile' : 'Set up size profile'}
                   </Link>
                 </div>
               </div>)}
@@ -682,6 +783,9 @@ export default function ProductDetailsPage() {
             name: product.name,
             category: product.category,
             price: displayPrice,
+            originalPrice: pricing.mrp,
+            discountPrice: pricing.hasDiscount ? displayPrice : null,
+            offer: product.offer,
             image: product.image,
             quantity: quantity,
             stock: stockQuantity,
@@ -700,6 +804,9 @@ export default function ProductDetailsPage() {
                         name: product.name,
                         category: product.category,
                         price: displayPrice,
+                        originalPrice: pricing.mrp,
+                        discountPrice: pricing.hasDiscount ? displayPrice : null,
+                        offer: product.offer,
                         image: product.image,
                         quantity: quantity,
                         stock: stockQuantity,
@@ -718,15 +825,17 @@ export default function ProductDetailsPage() {
               <p className="text-sm text-gray-600 mb-4">{t('product.deliveryLocationDesc')}</p>
               {/* Pincode Input Row */}
               <div className="flex flex-col sm:flex-row">
-                <input type="text" placeholder={t('product.enterPincode')} value={pincode} maxLength={6} onChange={(e) => {
-            setPincode(e.target.value);
+                <input type="text" inputMode="numeric" placeholder={t('product.enterPincode')} value={pincode} maxLength={6} onChange={(e) => {
+            setPincode(e.target.value.replace(/\D/g, ''));
             if (deliveryChecked)
                 setDeliveryChecked(false);
+            setPincodeStatus({ type: '', message: '' });
         }} onKeyDown={(e) => e.key === 'Enter' && handleApplyPincode()} className="min-w-0 border border-gray-300 rounded-t-md sm:rounded-l-md sm:rounded-tr-none px-4 py-2.5 flex-1 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"/>
-                <button onClick={handleApplyPincode} className="bg-gray-50 border border-t-0 sm:border-t sm:border-l-0 border-gray-300 text-gray-700 font-medium px-6 py-2.5 rounded-b-md sm:rounded-r-md sm:rounded-bl-none hover:bg-gray-100 transition-colors">
-                  {t('product.apply')}
+                <button type="button" disabled={checkingPincode} onClick={handleApplyPincode} className="bg-gray-50 border border-t-0 sm:border-t sm:border-l-0 border-gray-300 text-gray-700 font-medium px-6 py-2.5 rounded-b-md sm:rounded-r-md sm:rounded-bl-none hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:opacity-60">
+                  {checkingPincode ? 'Checking…' : t('product.apply')}
                 </button>
               </div>
+              {pincodeStatus.message && <p className={`mt-2 text-sm ${pincodeStatus.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>{pincodeStatus.message}</p>}
 
               {/* Flipkart-style Delivery Info — shown after pincode applied */}
               {deliveryChecked && (<div className="mt-4 border border-gray-100 rounded-lg overflow-hidden divide-y divide-gray-100">

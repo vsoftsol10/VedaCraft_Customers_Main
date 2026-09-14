@@ -233,12 +233,21 @@
 // }
 
 import { Phone, Mail, Instagram, Facebook } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import logoImg from '../../assets/products/Vsoft Logo black (1).png';
+import { getCategories } from '../../services/categoryApi';
 
 export default function Footer() {
   const { t } = useTranslation();
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories()
+      .then(setCategories)
+      .catch((error) => console.error('Could not load footer categories from Supabase:', error));
+  }, []);
 
   return (
     <footer className="bg-gray-950 text-gray-300">
@@ -278,17 +287,10 @@ export default function Footer() {
           <div className="lg:col-span-3">
             <h3 className="text-amber-400 font-semibold text-base mb-4">{t('footer.explore')}</h3>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
-              {[
-                { key: 'nav.eco', label: t('nav.eco'), to: '/eco' },
-                { key: 'nav.wellness', label: t('nav.wellness'), to: '/wellness' },
-                { key: 'nav.food', label: t('nav.food'), to: '/food' },
-                { key: 'nav.craft', label: t('nav.craft'), to: '/craft' },
-                { key: 'nav.fashion', label: t('nav.fashion'), to: '/fashion' },
-                { key: 'nav.decor', label: t('nav.decor'), to: '/decor' },
-              ].map((item) => (
-                <li key={item.key}>
-                  <Link to={item.to} className="text-sm text-gray-400 hover:text-white transition-colors">
-                    {item.label}
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link to={`/${category.slug}`} className="text-sm text-gray-400 hover:text-white transition-colors">
+                    {category.name}
                   </Link>
                 </li>
               ))}
@@ -337,7 +339,7 @@ export default function Footer() {
             </h3>
             <div className="flex items-center gap-4">
               <a
-                href="https://www.instagram.com/vedacrafts_women_ecosellers?igsh=MWQwZ2hobTk4Z281Mw=="
+                href="https://www.instagram.com/vedaconnect_women_network/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -362,7 +364,7 @@ export default function Footer() {
         <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col items-center justify-center gap-4">
           {/* Glass-effect Join Our Community button, amber family */}
           <a
-            href="https://www.instagram.com/vedacrafts_women_ecosellers?igsh=MWQwZ2hobTk4Z281Mw=="
+            href="https://event.vedacraftscommunity.in/"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-amber-400/15 backdrop-blur-md

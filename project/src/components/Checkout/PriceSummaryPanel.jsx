@@ -1,10 +1,11 @@
 import { ShieldCheck, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-export default function PriceSummaryPanel({ items, currentStep, onContinue, canContinue, isBuyNow = false, deliveryInfo, }) {
+import { getProductPricing } from '../../utils/pricing';
+export default function PriceSummaryPanel({ items, currentStep, onContinue, canContinue, deliveryInfo, }) {
     const { t } = useTranslation();
-    const totalMRP = items.reduce((acc, item) => acc + Math.round(item.price * 2) * item.quantity, 0);
-    const totalDiscount = items.reduce((acc, item) => acc + Math.round(item.price) * item.quantity, 0);
-    const totalAmount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const totalMRP = items.reduce((acc, item) => acc + getProductPricing(item).mrp * item.quantity, 0);
+    const totalDiscount = items.reduce((acc, item) => acc + getProductPricing(item).discountAmount * item.quantity, 0);
+    const totalAmount = items.reduce((acc, item) => acc + getProductPricing(item).salePrice * item.quantity, 0);
     const savings = totalMRP - totalAmount;
     const ctaLabel = currentStep === 3 ? t('checkout.placeOrder') : t('checkout.continue');
     return (<div className="w-full lg:w-96 flex-shrink-0">
@@ -15,24 +16,6 @@ export default function PriceSummaryPanel({ items, currentStep, onContinue, canC
             {t('checkout.priceDetails')}
           </h2>
         </div>
-
-        {/* Buy Now — Product Preview Card */}
-        {isBuyNow && items.length > 0 && (<div className="px-5 pt-4 pb-2">
-            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
-              <img src={items[0].image} alt={items[0].name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-amber-100"/>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-tight">
-                  {items[0].name}
-                </p>
-                <p className="text-sm font-bold text-gray-900 mt-1">
-                  &#8377;{items[0].price.toLocaleString('en-IN')}
-                </p>
-                <span className="inline-block text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-semibold mt-1">
-                  {t('checkout.buyNow')}
-                </span>
-              </div>
-            </div>
-          </div>)}
 
         {/* Price Breakdown */}
         <div className="p-5 space-y-4 text-sm">

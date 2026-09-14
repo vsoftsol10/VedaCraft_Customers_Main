@@ -20,6 +20,7 @@ const dedupeProducts = (products) => {
 export function WishlistProvider({ children }) {
   const { user, accessToken, authReady, logout } = useAuth();
   const { showLoginPrompt } = useLoginPrompt();
+  const userId = user?.id ?? null;
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export function WishlistProvider({ children }) {
     const load = async () => {
       if (!authReady) return;
 
-      if (!user || !accessToken) {
+      if (!userId || !accessToken) {
         if (mounted) setItems([]);
         return;
       }
@@ -52,7 +53,7 @@ export function WishlistProvider({ children }) {
     return () => {
       mounted = false;
     };
-  }, [accessToken, authReady, logout, user]);
+  }, [accessToken, authReady, logout, userId]);
 
   const addToWishlist = async (product) => {
     if (!user || !accessToken) {

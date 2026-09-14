@@ -12,6 +12,7 @@ import PriceSummaryPanel from '../components/Checkout/PriceSummaryPanel';
 import AddAddressDrawer from '../components/Checkout/AddAddressDrawer';
 import { supabase } from '../lib/supabase';
 import { checkDeliveryState } from '../services/deliveryApi';
+import { getProductPricing } from '../utils/pricing';
 const STEP_KEYS = ['address', 'summary', 'payment'];
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://vedacraft-customers-main.onrender.com/api/v1';
 function loadScript(src) {
@@ -67,9 +68,11 @@ export default function CheckoutPage() {
     const location = useLocation();
     // Buy Now item comes from router state — guaranteed to be present immediately
     const buyNowItem = location.state?.buyNowItem ?? null;
+    const [editableBuyNowItem, setEditableBuyNowItem] = useState(buyNowItem);
+    const buyNowItemKey = buyNowItem ? String(buyNowItem.id ?? buyNowItem.slug ?? '') : '';
     // Determine checkout items: Buy Now single item or full cart
     const isBuyNow = !!buyNowItem;
-    const checkoutItems = isBuyNow ? [buyNowItem] : items;
+    const checkoutItems = isBuyNow ? [editableBuyNowItem || buyNowItem] : items;
     const hasKnownOutOfStockItem = checkoutItems.some((item) => item.stock !== undefined && Number(item.stock) <= 0);
     // Step management (1=address, 2=summary, 3=payment)
     const stepFromUrl = STEP_KEYS.indexOf(searchParams.get('step'));
@@ -104,6 +107,9 @@ export default function CheckoutPage() {
             setSearchParams({ step: key }, { replace: true, state: location.state });
         }
     }, [currentStep, setSearchParams, location.state]);
+    useEffect(() => {
+        setEditableBuyNowItem(buyNowItem);
+    }, [buyNowItemKey]);
     // Keep selectedAddressId valid
     useEffect(() => {
         if (addresses.length > 0 &&
@@ -196,6 +202,9 @@ export default function CheckoutPage() {
             });
         }
     };
+    const handleUpdateBuyNowQuantity = (quantity) => {
+        setEditableBuyNowItem((item) => item ? { ...item, quantity } : item);
+    };
     const goToStep = (step) => {
         setCurrentStep(step);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -249,7 +258,7 @@ export default function CheckoutPage() {
         }
         if (currentStep === 3) {
             const playOrderPlacedSound = createOrderPlacedSound();
-            const total = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+            const total = checkoutItems.reduce((acc, item) => acc + getProductPricing(item).salePrice * item.quantity, 0);
             const itemCount = checkoutItems.reduce((acc, item) => acc + item.quantity, 0);
             const firstProduct = checkoutItems[0]?.name || 'Vedha Craft Order';
             const { data: { session } } = await supabase.auth.getSession();
@@ -383,9 +392,6 @@ export default function CheckoutPage() {
           <h1 className="text-xl font-bold text-gray-900">
             {t('checkout.title')}
           </h1>
-          {isBuyNow && (<span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">
-              {t('checkout.buyNow')}
-            </span>)}
         </div>
 
         {/* Stepper */}
@@ -399,14 +405,14 @@ export default function CheckoutPage() {
             {currentStep === 1 && (<AddressStep selectedAddressId={selectedAddressId} onSelectAddress={handleSelectAddress} onAddAddress={handleOpenAddAddress} onEditAddress={handleOpenEditAddress} onDeleteAddress={handleDeleteAddress} onContinue={handleContinue}/>)}
 
             {/* Step 2: Order Summary */}
-            {currentStep === 2 && (<OrderSummaryStep selectedAddress={selectedAddress} items={checkoutItems} onChangeAddress={() => goToStep(1)} onContinue={handleContinue} isBuyNow={isBuyNow}/>)}
+            {currentStep === 2 && (<OrderSummaryStep selectedAddress={selectedAddress} items={checkoutItems} onChangeAddress={() => goToStep(1)} onContinue={handleContinue} isBuyNow={isBuyNow} onUpdateBuyNowQuantity={handleUpdateBuyNowQuantity}/>)}
 
             {/* Step 3: Payment */}
             {currentStep === 3 && (<PaymentStep selectedAddress={selectedAddress} items={checkoutItems} onChangeAddress={() => goToStep(1)} onChangeSummary={() => goToStep(2)} selectedPayment={selectedPayment} onSelectPayment={setSelectedPayment}/>)}
           </div>
 
           {/* Right Column: Price Summary */}
-          <PriceSummaryPanel items={checkoutItems} currentStep={currentStep} onContinue={handleContinue} canContinue={canContinue} isBuyNow={isBuyNow} deliveryInfo={deliveryInfo}/>
+          <PriceSummaryPanel items={checkoutItems} currentStep={currentStep} onContinue={handleContinue} canContinue={canContinue} deliveryInfo={deliveryInfo}/>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ const router = Router();
 
 router.get('/', authenticate, orderController.getOrders);
 router.post('/', authenticate, orderController.createOrder);
+router.post('/:id/return-request', authenticate, orderController.createReturnRequest);
 router.patch('/:id/status', authenticate, orderController.updateOrderStatus);
 
 export default router;

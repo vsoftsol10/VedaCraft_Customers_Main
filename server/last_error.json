@@ -1,6 +1,5 @@
 {
-  "message": "loikuyhgf has only 0 item(s) in stock",
-  "stack": "AppError: loikuyhgf has only 0 item(s) in stock\n    at decrementStockForItems (file:///C:/Users/acer/Desktop/VedaCraft_Customers_Main/server/src/services/inventoryService.js:100:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async createOrder (file:///C:/Users/acer/Desktop/VedaCraft_Customers_Main/server/src/controllers/orderController.js:67:5)",
-  "path": "/api/v1/orders",
+  "message": "Could not find the table 'public.return_requests' in the schema cache",
+  "path": "/api/v1/orders/1cbf8b42-7397-4d5f-b8ad-d1c6bfb6ec44/return-request",
   "method": "POST"
 }

@@ -46,9 +46,9 @@ const normalizeOrderItems = (items = []) => {
   }));
 };
 
-const getProductsById = async (stockItems) => {
+const getProductsByIds = async (productIds) => {
   const client = getProductClient();
-  const ids = stockItems.map((item) => item.productId);
+  const ids = [...new Set(productIds.map((id) => String(id).trim()).filter(Boolean))];
 
   if (ids.length === 0) return new Map();
 
@@ -60,6 +60,21 @@ const getProductsById = async (stockItems) => {
   if (error) throw new AppError(error.message, 500);
 
   return new Map((data || []).map((product) => [String(product.id), product]));
+};
+
+const getProductsById = async (stockItems) => {
+  return getProductsByIds(stockItems.map((item) => item.productId));
+};
+
+export const getStockByProductIds = async (productIds) => {
+  const productsById = await getProductsByIds(productIds);
+
+  return new Map(
+    [...productsById.entries()].map(([id, product]) => [
+      id,
+      Math.max(0, Number(product.quantity) || 0),
+    ])
+  );
 };
 
 export const assertStockAvailable = async (items) => {

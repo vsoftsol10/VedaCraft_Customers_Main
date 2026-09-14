@@ -218,6 +218,21 @@ export const getProductByIdOrSlug = async (idOrSlug) => {
   return toProductDto(data);
 };
 
+export const getProductDtosByIds = async (ids = []) => {
+  const productIds = [...new Set(ids.map((id) => String(id || '').trim()).filter(Boolean))];
+  if (productIds.length === 0) return new Map();
+
+  const client = getProductClient();
+  const { data, error } = await client
+    .from('products')
+    .select(PRODUCT_COLUMNS)
+    .in('id', productIds);
+
+  if (error) throw new AppError(error.message, 500);
+
+  return new Map((data || []).map((product) => [String(product.id), toProductDto(product)]));
+};
+
 export const getProductsByCategory = async (category, filters) => {
   return getProducts({
     ...filters,

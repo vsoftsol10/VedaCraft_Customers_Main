@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { mapApiProductToProduct } from '../types/product';
 import { allProducts } from '../data/allProducts';
+import { getProductPricing } from '../utils/pricing';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
     'https://vedacraft-customers-main.onrender.com/api/v1'
@@ -113,6 +114,7 @@ export const addToWishlist = async (product, tokenOverride) => {
     if (!token)
         throw new Error('Please sign in to use wishlist');
     const wishlistProduct = await resolveWishlistProduct(product);
+    const pricing = getProductPricing(wishlistProduct);
     const res = await fetch(`${API_BASE_URL}/wishlist`, {
         method: 'POST',
         headers: {
@@ -124,7 +126,10 @@ export const addToWishlist = async (product, tokenOverride) => {
             slug: wishlistProduct.slug,
             name: wishlistProduct.name,
             category: wishlistProduct.category,
-            price: wishlistProduct.discountPrice || wishlistProduct.price,
+            price: pricing.salePrice,
+            originalPrice: pricing.mrp,
+            discountPrice: pricing.hasDiscount ? pricing.salePrice : null,
+            offer: wishlistProduct.offer,
             image: wishlistProduct.image,
             rating: wishlistProduct.rating,
         }),

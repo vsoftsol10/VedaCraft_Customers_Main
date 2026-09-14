@@ -15,11 +15,17 @@ const normalizeProduct = (product) => {
     const images = Array.isArray(product.images) ? product.images : [];
     const firstImage = product.image || images[0] || '';
     const specs = product.specifications || {};
+    const price = Number(product.price || 0);
+    const discountPrice = product.discount_price === null || product.discount_price === undefined
+        ? null
+        : Number(product.discount_price);
     return {
         ...product,
         images,
         image: firstImage,
-        price: Number(product.discount_price ?? product.price),
+        price,
+        originalPrice: price,
+        discountPrice: Number.isFinite(discountPrice) ? discountPrice : null,
         rating: Number(product.rating || 0),
         total_reviews: Number(product.total_reviews || 0),
         specifications: specs,
