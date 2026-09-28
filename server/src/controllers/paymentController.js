@@ -129,6 +129,7 @@ export const verifyPaymentAndCreateOrder = async (req, res, next) => {
           product: product || 'Vedha Craft Order',
           items: orderItems,
           address: address || null,
+          status_history: [{ status: 'Paid', at: new Date().toISOString() }],
           // If the columns exist, we could save them:
           // razorpay_payment_id,
           // razorpay_order_id,

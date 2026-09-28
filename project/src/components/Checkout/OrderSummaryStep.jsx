@@ -1,7 +1,7 @@
 import { Star, Truck, MapPin, Minus, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../../context/CartContext';
-import { getProductPricing } from '../../utils/pricing';
+import { getProductPricing, isOfferActive } from '../../utils/pricing';
 // Generate the standard delivery date: seven calendar days from today.
 function getDeliveryDate() {
     const d = new Date();
@@ -102,6 +102,7 @@ export default function OrderSummaryStep({ selectedAddress, items, onChangeAddre
 
                 {/* Price */}
                 <div className="flex items-center gap-2 flex-wrap">
+                  {isOfferActive(item.activeOffer) && <span className="w-full text-xs font-semibold text-amber-700">{item.activeOffer.name} applied</span>}
                   {pricing.hasDiscount && (<span className="text-green-700 font-bold text-sm">
                     ↓{pricing.discountPercent}%
                   </span>)}

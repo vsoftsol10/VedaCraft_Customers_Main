@@ -1,5 +1,5 @@
 {
-  "message": "Could not find the table 'public.return_requests' in the schema cache",
-  "path": "/api/v1/orders/1cbf8b42-7397-4d5f-b8ad-d1c6bfb6ec44/return-request",
+  "message": "Could not find the 'status_history' column of 'orders' in the schema cache",
+  "path": "/api/v1/orders",
   "method": "POST"
 }

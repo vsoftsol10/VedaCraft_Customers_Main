@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trash2, Star, ChevronLeft, Minus, Plus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useTranslation } from 'react-i18next';
-import { getProductPricing } from '../../utils/pricing';
+import { getProductPricing, isOfferActive } from '../../utils/pricing';
 const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -58,7 +58,8 @@ export default function CartDrawer() {
                       {item.rating && (<div className="flex items-center gap-0.5 mb-2">
                           <span className="text-[10px] text-gray-600 font-medium">{item.rating}</span>
                           <Star className="w-3 h-3 fill-green-600 text-green-600"/>
-                        </div>)}
+                      </div>)}
+                      {isOfferActive(item.activeOffer) && <p className="mb-2 text-[11px] font-semibold text-amber-700">{item.activeOffer.name} applied</p>}
                       
                       <div className="flex items-center text-sm text-gray-600">
                         <span className="mr-2 text-xs">{t('cart.quantity')} :</span>

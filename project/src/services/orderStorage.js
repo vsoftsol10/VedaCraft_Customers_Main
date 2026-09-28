@@ -209,6 +209,8 @@ function normalizeOrder(row, fallbackUserId) {
     userId: row.user_id || row.userId || fallbackUserId,
     updatedAt: row.updated_at || row.updatedAt,
     deliveredAt: row.delivered_at || row.deliveredAt || null,
+    orderNumber:row.order_number,
+    statusHistory: Array.isArray(row.status_history) ? row.status_history : row.statusHistory || [],
   };
 }
 

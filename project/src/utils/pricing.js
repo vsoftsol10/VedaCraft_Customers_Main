@@ -3,7 +3,19 @@ const toFiniteNumber = (value) => {
   return Number.isFinite(number) ? number : null;
 };
 
+export const isOfferActive = (offer) => {
+  if (!offer || typeof offer !== 'object') return false;
+  const now = Date.now();
+  const start = offer.startDate ?? offer.start_date;
+  const end = offer.endDate ?? offer.end_date;
+  return (!start || new Date(start).getTime() <= now) && (!end || new Date(end).getTime() > now);
+};
+
 const parseOfferDiscount = (offer, mrp) => {
+  if (offer && typeof offer === 'object') {
+    const amount = Number(offer.discountAmount ?? offer.discount_amount);
+    return Number.isFinite(amount) && amount > 0 ? amount : 0;
+  }
   const text = String(offer || '');
   const percentMatch = text.match(/(\d+(?:\.\d+)?)\s*%/);
   if (percentMatch) {
@@ -25,10 +37,14 @@ export const roundPrice = (value) => {
 
 export const getProductPricing = (item = {}) => {
   const mrp = roundPrice(item.originalPrice ?? item.mrp ?? item.price);
+  const sellingPrice = toFiniteNumber(item.sellingPrice ?? item.selling_price);
   const explicitDiscountPrice = toFiniteNumber(item.discountPrice ?? item.discount_price);
-  const offerDiscount = mrp > 0 ? parseOfferDiscount(item.offer, mrp) : 0;
-  const offeredPrice = offerDiscount > 0 ? roundPrice(mrp - offerDiscount) : null;
-  const salePrice = roundPrice(explicitDiscountPrice ?? offeredPrice ?? item.price ?? mrp);
+  const candidateOffer = item.activeOffer ?? item.active_offer;
+  const activeOffer = isOfferActive(candidateOffer) ? candidateOffer : null;
+  const offerDiscount = mrp > 0 ? parseOfferDiscount(activeOffer || item.offer, sellingPrice ?? mrp) : 0;
+  const offerBasePrice = sellingPrice ?? explicitDiscountPrice ?? item.price ?? mrp;
+  const offeredPrice = offerDiscount > 0 ? roundPrice(offerBasePrice - offerDiscount) : null;
+  const salePrice = roundPrice(activeOffer ? (offeredPrice ?? sellingPrice ?? item.price ?? mrp) : (sellingPrice ?? explicitDiscountPrice ?? offeredPrice ?? item.price ?? mrp));
   const hasDiscount = mrp > salePrice;
   const discountAmount = hasDiscount ? roundPrice(mrp - salePrice) : 0;
   const discountPercent = hasDiscount && mrp > 0 ? Math.round((discountAmount / mrp) * 100) : 0;

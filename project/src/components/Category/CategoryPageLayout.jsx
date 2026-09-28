@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Star, ShoppingCart, Heart, SlidersHorizontal, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Star, ShoppingCart, Heart, ShoppingBag, SlidersHorizontal, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProductsByCategory } from '../../services/productApi';
-import { mapApiProductToProduct, mapLocalProductToProduct } from '../../types/product';
+import { mapApiProductToProduct } from '../../types/product';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -59,7 +59,7 @@ function ProductCard({ product }) {
     };
     return (<div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group flex flex-col">
       <div className="relative overflow-hidden bg-gray-50 aspect-square">
-        <Link to={`/product/${product.slug || product.id}`} className="block w-full h-full">
+        <Link to={`/product/${encodeURIComponent(product.slug || product.id)}`} className="block w-full h-full">
           <img src={product.image} alt={t(`productsData.${product.name}`, product.name)} className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500"/>
         </Link>
         {/* Wishlist */}
@@ -72,7 +72,7 @@ function ProductCard({ product }) {
       </div>
 
       <div className="p-3 flex flex-col gap-1 flex-1">
-        <Link to={`/product/${product.slug || product.id}`} className="hover:text-green-600 transition-colors">
+        <Link to={`/product/${encodeURIComponent(product.slug || product.id)}`} className="hover:text-green-600 transition-colors">
           <h3 className="text-xs font-semibold text-gray-800 leading-tight line-clamp-2">{t(`productsData.${product.name}`, product.name)}</h3>
         </Link>
         <p className="text-[10px] text-green-600 font-medium">{t(`productsData.${product.category}`, product.category)}</p>
@@ -99,7 +99,7 @@ function ProductCard({ product }) {
       </div>
     </div>);
 }
-export default function CategoryPageLayout({ title, icon: Icon, products: initialProducts, apiCategory, categories, features, discounts, }) {
+export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, products: initialProducts, apiCategory, categories = [], features = [], discounts = [], }) {
     const { t } = useTranslation();
     const pageKeyMap = {
         'Eco-Friendly Products': 'eco',
@@ -111,11 +111,8 @@ export default function CategoryPageLayout({ title, icon: Icon, products: initia
     };
     const pageKey = pageKeyMap[title];
     const displayTitle = pageKey ? t(`pages.${pageKey}.title`, title) : title;
-    const normalizeProduct = (product) => {
-        return 'slug' in product && 'stock' in product ? product : mapLocalProductToProduct(product);
-    };
-    const [products, setProducts] = useState(() => initialProducts ? initialProducts.map(normalizeProduct) : []);
-    const [isLoading, setIsLoading] = useState(!initialProducts);
+    const [products, setProducts] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [filters, setFilters] = useState({
         categories: [],
         features: [],
@@ -146,51 +143,13 @@ export default function CategoryPageLayout({ title, icon: Icon, products: initia
                 const apiProducts = response.products;
                 // Map API products to frontend domain model (camelCase)
                 const domainApiProducts = apiProducts.map((p) => mapApiProductToProduct(p));
-                // Create a lookup map of slug -> DomainProduct
-                const apiProductMap = new Map();
-                domainApiProducts.forEach((p) => {
-                    if (p.slug) {
-                        apiProductMap.set(p.slug, p);
-                    }
-                });
                 if (mounted) {
-                    if (domainApiProducts.length > 0) {
-                        setProducts(domainApiProducts);
-                    }
-                    else if (initialProducts) {
-                        // Merge backend data into local products using slug mapping
-                        const mergeProduct = (localProd) => {
-                            const normalizedLocal = normalizeProduct(localProd);
-                            const backendProd = apiProductMap.get(normalizedLocal.slug);
-                            if (backendProd) {
-                                return {
-                                    ...normalizedLocal,
-                                    id: backendProd.id, // Use backend ID (1-61) instead of local ID (101+)
-                                    price: backendProd.price,
-                                    originalPrice: backendProd.originalPrice,
-                                    discountPrice: backendProd.discountPrice,
-                                    stock: backendProd.stock,
-                                    rating: backendProd.rating,
-                                    totalReviews: backendProd.totalReviews,
-                                    image: backendProd.image || normalizedLocal.image,
-                                    images: backendProd.images?.length ? backendProd.images : normalizedLocal.images,
-                                };
-                            }
-                            return normalizedLocal;
-                        };
-                        const mergedProducts = initialProducts.map(mergeProduct);
-                        setProducts(mergedProducts);
-                    }
-                    else {
-                        setProducts(domainApiProducts);
-                    }
+                    setProducts(domainApiProducts);
                 }
             }
             catch (error) {
-                console.warn('Failed to load category products from backend, falling back to local data:', error);
-                if (mounted && initialProducts) {
-                    setProducts(initialProducts.map(normalizeProduct));
-                }
+                console.warn('Failed to load category products from backend:', error);
+                if (mounted) setProducts([]);
             }
             finally {
                 if (mounted)

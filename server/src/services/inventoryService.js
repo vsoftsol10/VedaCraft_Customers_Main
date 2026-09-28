@@ -1,30 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
 import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { AppError } from '../utils/apiResponse.js';
 
-const getProductClient = () => {
-  const url = process.env.PRODUCT_SUPABASE_URL;
-  const key = process.env.PRODUCT_SUPABASE_SERVICE_ROLE_KEY || process.env.PRODUCT_SUPABASE_ANON_KEY;
-
-  if (url) {
-    if (!key) {
-      throw new AppError(
-        'PRODUCT_SUPABASE_SERVICE_ROLE_KEY or PRODUCT_SUPABASE_ANON_KEY is required for inventory updates',
-        500
-      );
-    }
-
-    return createClient(url, key, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
-    });
-  }
-
-  return supabaseAdmin || supabase;
-};
+const getProductClient = () => supabaseAdmin || supabase;
 
 const normalizeOrderItems = (items = []) => {
   const quantityByProductId = new Map();
@@ -53,8 +30,8 @@ const getProductsByIds = async (productIds) => {
   if (ids.length === 0) return new Map();
 
   const { data, error } = await client
-    .from('products')
-    .select('id, name, quantity')
+    .from('seller_products')
+    .select('id, product_name, stock_quantity')
     .in('id', ids);
 
   if (error) throw new AppError(error.message, 500);
@@ -72,7 +49,7 @@ export const getStockByProductIds = async (productIds) => {
   return new Map(
     [...productsById.entries()].map(([id, product]) => [
       id,
-      Math.max(0, Number(product.quantity) || 0),
+      Math.max(0, Number(product.stock_quantity) || 0),
     ])
   );
 };
@@ -83,7 +60,7 @@ export const assertStockAvailable = async (items) => {
 
   for (const item of stockItems) {
     const product = productsById.get(item.productId);
-    const availableQuantity = Number(product?.quantity ?? 0);
+    const availableQuantity = Number(product?.stock_quantity ?? 0);
 
     if (!product) {
       throw new AppError('Product not found', 404);
@@ -91,7 +68,7 @@ export const assertStockAvailable = async (items) => {
 
     if (availableQuantity < item.quantity) {
       throw new AppError(
-        `${product.name || 'Product'} has only ${availableQuantity} item(s) in stock`,
+        `${product.product_name || 'Product'} has only ${availableQuantity} item(s) in stock`,
         400
       );
     }
@@ -105,7 +82,7 @@ export const decrementStockForItems = async (items) => {
 
   for (const item of stockItems) {
     const product = productsById.get(item.productId);
-    const availableQuantity = Number(product?.quantity ?? 0);
+    const availableQuantity = Number(product?.stock_quantity ?? 0);
 
     if (!product) {
       throw new AppError('Product not found', 404);
@@ -113,7 +90,7 @@ export const decrementStockForItems = async (items) => {
 
     if (availableQuantity < item.quantity) {
       throw new AppError(
-        `${product.name || 'Product'} has only ${availableQuantity} item(s) in stock`,
+        `${product.product_name || 'Product'} has only ${availableQuantity} item(s) in stock`,
         400
       );
     }
@@ -121,11 +98,11 @@ export const decrementStockForItems = async (items) => {
 
   for (const item of stockItems) {
     const product = productsById.get(item.productId);
-    const availableQuantity = Number(product.quantity || 0);
+    const availableQuantity = Number(product.stock_quantity || 0);
 
     const { error } = await client
-      .from('products')
-      .update({ quantity: availableQuantity - item.quantity })
+      .from('seller_products')
+      .update({ stock_quantity: availableQuantity - item.quantity })
       .eq('id', item.productId)
       .select('id')
       .single();
@@ -143,10 +120,10 @@ export const restoreStockForItems = async (items) => {
     const product = productsById.get(item.productId);
     if (!product) continue;
 
-    const currentQuantity = Number(product.quantity || 0);
+    const currentQuantity = Number(product.stock_quantity || 0);
     const { error } = await client
-      .from('products')
-      .update({ quantity: currentQuantity + item.quantity })
+      .from('seller_products')
+      .update({ stock_quantity: currentQuantity + item.quantity })
       .eq('id', item.productId)
       .select('id')
       .single();

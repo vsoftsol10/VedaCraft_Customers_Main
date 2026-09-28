@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useParams } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Navbar from './components/Navbar/Navbar';
 import Home from './pages/Home';
@@ -8,6 +8,7 @@ import WellnessPage from './pages/WellnessPage';
 import FoodPage from './pages/FoodPage';
 import CraftPage from './pages/CraftPage';
 import FashionPage from './pages/FashionPage';
+import CategoryPageLayout from './components/Category/CategoryPageLayout';
 import DecorItemsPage from './pages/DecorItemsPage';
 import ProductDetail from './pages/ProductDetail';
 import Footer from './components/Footer/Footer';
@@ -47,6 +48,11 @@ function ScrollToTop() {
     return null;
 }
 
+function DynamicCategoryPage() {
+    const { category } = useParams();
+    return <CategoryPageLayout title={category} apiCategory={category} />;
+}
+
 function App() {
     return (<AuthProvider>
       <BrowserRouter>
@@ -81,6 +87,8 @@ function App() {
                       <Route path="/search" element={<SearchResultsPage />}/>
                       <Route path="/legal-policies" element={<LegalPolicies />}/>
                       <Route path='/seller' element={<Seller/>}/>
+                      {/* Database-backed categories such as /style need no dedicated page component. */}
+                      <Route path="/:category" element={<DynamicCategoryPage />}/>
                       {/* Profile routes - additionally protected by ProtectedRoute */}
                       <Route path="/profile" element={<ProtectedRoute>
                             <ProfilePage />

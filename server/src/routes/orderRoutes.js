@@ -5,8 +5,11 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 
 router.get('/', authenticate, orderController.getOrders);
+router.get('/reviews', authenticate, orderController.getReviewedOrderIds);
+router.get('/:id/review', authenticate, orderController.getOrderReview);
 router.post('/', authenticate, orderController.createOrder);
 router.post('/:id/return-request', authenticate, orderController.createReturnRequest);
+router.post('/:id/review', authenticate, orderController.createReview);
 router.patch('/:id/status', authenticate, orderController.updateOrderStatus);
 
 export default router;

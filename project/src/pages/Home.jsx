@@ -3,15 +3,13 @@ import HeroBanner from '../components/Hero/HeroBanner';
 import CategorySection from '../components/Categories/CategorySection';
 import ProductSection from '../components/Products/ProductSection';
 import { useTranslation } from 'react-i18next';
-import { allProducts } from '../data/allProducts';
-import { mapLocalProductToProduct, mapApiProductToProduct } from '../types/product';
+import { mapApiProductToProduct } from '../types/product';
 import { getProducts } from '../services/productApi';
 export default function Home() {
     const { t } = useTranslation();
-    // Initialize state with local product data
-    const [bestSellers, setBestSellers] = useState(() => allProducts.filter((product) => product.section === 'bestsellers').map(mapLocalProductToProduct));
-    const [newArrivals, setNewArrivals] = useState(() => allProducts.filter((product) => product.section === 'newarrivals').map(mapLocalProductToProduct));
-    const [trending, setTrending] = useState(() => allProducts.filter((product) => product.section === 'trending').map(mapLocalProductToProduct));
+    const [bestSellers, setBestSellers] = useState([]);
+    const [newArrivals, setNewArrivals] = useState([]);
+    const [trending, setTrending] = useState([]);
     useEffect(() => {
         const fetchBackendProducts = async () => {
             try {
@@ -20,15 +18,12 @@ export default function Home() {
                 const apiProducts = response.products;
                 // Map API products to frontend domain model (camelCase)
                 const domainApiProducts = apiProducts.map((p) => mapApiProductToProduct(p));
-                if (domainApiProducts.length > 0) {
-                    setBestSellers(domainApiProducts.slice(0, 10));
-                    setNewArrivals((domainApiProducts.slice(10, 20).length ? domainApiProducts.slice(10, 20) : domainApiProducts.slice(0, 10)));
-                    setTrending((domainApiProducts.slice(20, 30).length ? domainApiProducts.slice(20, 30) : domainApiProducts.slice(0, 10)));
-                }
+                setBestSellers(domainApiProducts.slice(0, 10));
+                setNewArrivals(domainApiProducts.slice(10, 20).length ? domainApiProducts.slice(10, 20) : domainApiProducts.slice(0, 10));
+                setTrending(domainApiProducts.slice(20, 30).length ? domainApiProducts.slice(20, 30) : domainApiProducts.slice(0, 10));
             }
             catch (error) {
-                console.warn('Backend products API unavailable. Falling back to local data:', error);
-                // Fallback is automatic since state is initialized with local data
+                console.warn('Backend products API unavailable:', error);
             }
         };
         fetchBackendProducts();

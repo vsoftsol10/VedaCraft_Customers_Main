@@ -2,7 +2,8 @@ export const mapApiProductToProduct = (apiProduct) => {
     const images = Array.isArray(apiProduct.images) ? apiProduct.images : [];
     const firstImage = apiProduct.image || images[0] || '';
     const specs = apiProduct.specifications || {};
-    const price = Number(apiProduct.price || 0);
+    const sellingPrice = Number(apiProduct.sellingPrice ?? apiProduct.selling_price ?? apiProduct.price ?? 0);
+    const mrp = Number(apiProduct.mrp ?? apiProduct.originalPrice ?? apiProduct.original_price ?? apiProduct.price ?? sellingPrice);
     const discountPrice = apiProduct.discountPrice ?? apiProduct.discount_price;
     return {
         id: apiProduct.id,
@@ -11,8 +12,10 @@ export const mapApiProductToProduct = (apiProduct) => {
         description: apiProduct.description,
         category: apiProduct.category,
         brand: apiProduct.brand,
-        price,
-        originalPrice: Number(apiProduct.originalPrice ?? price),
+        price: sellingPrice,
+        sellingPrice,
+        mrp,
+        originalPrice: mrp,
         discountPrice: discountPrice === null || discountPrice === undefined ? null : Number(discountPrice),
         stock: apiProduct.stock ?? apiProduct.quantity ?? 0,
         quantity: apiProduct.quantity ?? apiProduct.stock ?? 0,
@@ -23,6 +26,7 @@ export const mapApiProductToProduct = (apiProduct) => {
         specifications: specs,
         isFeatured: apiProduct.is_featured,
         offer: apiProduct.offer,
+        activeOffer: apiProduct.active_offer ?? apiProduct.activeOffer ?? null,
         shortDescription: apiProduct.short_description,
         productHighlights: apiProduct.product_highlights || specs.productHighlights || [],
         highlights: apiProduct.highlights || specs.highlights || [],

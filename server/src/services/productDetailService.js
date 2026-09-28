@@ -33,12 +33,12 @@ export const getProductDetail = async (idOrSlug) => {
     full_description: product.description,
     how_to_use: product.how_to_use,
     core_instructions: product.core_instruction,
-    care_instructions: null,
-    materials: null,
+    care_instructions: product.core_instruction,
+    materials: product.specifications?.material || null,
     ingredients: null,
     highlights: (highlights || []).map(toHighlightObject),
     specifications: product.specifications || {},
-    dimensions: null,
+    dimensions: product.specifications?.dimensions || null,
     shipping_info: null,
     seo_title: product.name,
     seo_description: product.short_description || product.description,
@@ -48,5 +48,5 @@ export const getProductDetail = async (idOrSlug) => {
 };
 
 export const upsertProductDetail = async () => {
-  throw new AppError('Product detail updates are managed in Supabase products table', 400);
+  throw new AppError('Product detail updates are managed in the Supabase seller_products table', 400);
 };

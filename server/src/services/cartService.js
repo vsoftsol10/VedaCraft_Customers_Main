@@ -64,13 +64,14 @@ const getOrCreateCart = async (userId, token) => {
 };
 
 const mapCartRow = (row, stock, product) => {
-  const originalPrice = Number(product?.price);
+  const sellingPrice = Number(product?.selling_price ?? product?.price);
+  const originalPrice = Number(product?.mrp ?? product?.original_price ?? product?.price);
   const discountPrice = product?.discount_price === null || product?.discount_price === undefined
     ? null
     : Number(product.discount_price);
   const snapshotPrice = Number(row.product_price || 0);
-  const salePrice = Number.isFinite(discountPrice) && discountPrice >= 0
-    ? discountPrice
+  const salePrice = Number.isFinite(sellingPrice)
+    ? sellingPrice
     : Number.isFinite(originalPrice)
       ? originalPrice
       : snapshotPrice;
@@ -81,9 +82,11 @@ const mapCartRow = (row, stock, product) => {
     name: product?.name || row.product_name || 'Product',
     category: product?.category || row.product_category || undefined,
     price: salePrice,
+    sellingPrice: salePrice,
     originalPrice: Number.isFinite(originalPrice) ? originalPrice : salePrice,
     discountPrice: Number.isFinite(discountPrice) ? discountPrice : undefined,
     offer: product?.offer || undefined,
+    activeOffer: product?.active_offer || undefined,
     image: product?.image || row.product_image || '',
     quantity: row.quantity,
     stock,

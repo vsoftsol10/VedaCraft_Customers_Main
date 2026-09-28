@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { getProductBySlug, getProductDetails, getProductsByCategory, searchProducts } from '../services/productApi';
 import { mapApiProductToProduct } from '../types/product';
 import { allProducts } from '../data/allProducts';
-import { getProductPricing } from '../utils/pricing';
+import { getProductPricing, isOfferActive } from '../utils/pricing';
 const toSlug = (value) => String(value || '')
     .trim()
     .toLowerCase()
@@ -725,10 +725,17 @@ export default function ProductDetailsPage() {
             </div>
 
             {/* Price */}
-            <div className="flex flex-wrap items-end gap-3 mb-6">
-              <span className="text-3xl font-bold text-gray-900">&#8377; {displayPrice}</span>
-              {pricing.hasDiscount && (<span className="text-lg text-gray-400 line-through mb-1">&#8377; {pricing.mrp}</span>)}
-              {product.offer && (<span className="text-sm text-green-600 font-semibold mb-1.5">{product.offer}</span>)}
+            <div className="mb-6">
+              <div className="flex flex-wrap items-end gap-3">
+                <span className="text-sm font-medium text-gray-600 mb-1">Selling price</span>
+                <span className="text-3xl font-bold text-gray-900">&#8377; {displayPrice}</span>
+                {pricing.hasDiscount && (<span className="text-lg text-gray-400 line-through mb-1">MRP &#8377; {pricing.mrp}</span>)}
+              </div>
+              {pricing.hasDiscount && (
+                <p className="mt-1 text-sm font-semibold text-green-600">
+                  You save &#8377; {pricing.discountAmount} ({pricing.discountPercent}% off)
+                </p>
+              )}
             </div>
             {/* <p className={`mb-4 text-sm font-semibold ${isOutOfStock ? 'text-red-600' : 'text-green-700'}`}>
               {isOutOfStock ? 'Out of stock' : `${stockQuantity} in stock`}
@@ -773,6 +780,10 @@ export default function ProductDetailsPage() {
               </div>)}
 
             {/* Action Buttons */}
+            {isOfferActive(product.activeOffer) && (<div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-bold">{product.activeOffer.name}</p>
+              <p className="mt-0.5">Save ₹{Number(product.activeOffer.discountAmount).toLocaleString('en-IN')} with this limited-time offer.</p>
+            </div>)}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
               <button disabled={isOutOfStock} onClick={() => {
             if (isOutOfStock)
@@ -786,6 +797,7 @@ export default function ProductDetailsPage() {
             originalPrice: pricing.mrp,
             discountPrice: pricing.hasDiscount ? displayPrice : null,
             offer: product.offer,
+            activeOffer: product.activeOffer,
             image: product.image,
             quantity: quantity,
             stock: stockQuantity,
@@ -807,6 +819,7 @@ export default function ProductDetailsPage() {
                         originalPrice: pricing.mrp,
                         discountPrice: pricing.hasDiscount ? displayPrice : null,
                         offer: product.offer,
+                        activeOffer: product.activeOffer,
                         image: product.image,
                         quantity: quantity,
                         stock: stockQuantity,

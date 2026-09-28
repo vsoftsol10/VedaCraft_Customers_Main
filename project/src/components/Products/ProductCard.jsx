@@ -3,7 +3,7 @@ import { ShoppingCart, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import WishlistButton from './WishlistButton';
 import { useCart } from '../../context/CartContext';
-import { getProductPricing } from '../../utils/pricing';
+import { getProductPricing, isOfferActive } from '../../utils/pricing';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -21,7 +21,7 @@ export default function ProductCard({ product }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group flex flex-col">
       <div className="relative overflow-hidden bg-gray-50 aspect-square">
-        <Link to={`/product/${product.slug || product.id}`} className="block w-full h-full">
+        <Link to={`/product/${encodeURIComponent(product.slug || product.id)}`} className="block w-full h-full">
           <img
             src={product.image}
             alt={product.name}
@@ -37,10 +37,15 @@ export default function ProductCard({ product }) {
             Out of stock
           </div>
         )}
+        {isOfferActive(product.activeOffer) && !isOutOfStock && (
+          <div className="absolute left-2 top-2 rounded bg-amber-500 px-2 py-1 text-[10px] font-bold text-white">
+            {product.activeOffer.name}
+          </div>
+        )}
       </div>
 
       <div className="p-2.5 flex flex-col gap-1 flex-1">
-        <Link to={`/product/${product.slug || product.id}`} className="hover:text-green-600 transition-colors">
+        <Link to={`/product/${encodeURIComponent(product.slug || product.id)}`} className="hover:text-green-600 transition-colors">
           <h3 className="text-xs font-semibold text-gray-800 leading-tight line-clamp-2">
             {t(`productsData.${product.name}`, product.name)}
           </h3>
@@ -72,6 +77,7 @@ export default function ProductCard({ product }) {
               originalPrice: pricing.mrp,
               discountPrice: pricing.hasDiscount ? displayPrice : null,
               offer: product.offer,
+              activeOffer: product.activeOffer,
               image: product.image,
               quantity: 1,
               stock: hasKnownStock ? stockQuantity : undefined,

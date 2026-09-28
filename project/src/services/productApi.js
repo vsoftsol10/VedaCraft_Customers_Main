@@ -15,7 +15,8 @@ const normalizeProduct = (product) => {
     const images = Array.isArray(product.images) ? product.images : [];
     const firstImage = product.image || images[0] || '';
     const specs = product.specifications || {};
-    const price = Number(product.price || 0);
+    const sellingPrice = Number(product.selling_price ?? product.sellingPrice ?? product.price ?? 0);
+    const mrp = Number(product.mrp ?? product.original_price ?? product.price ?? sellingPrice);
     const discountPrice = product.discount_price === null || product.discount_price === undefined
         ? null
         : Number(product.discount_price);
@@ -23,9 +24,12 @@ const normalizeProduct = (product) => {
         ...product,
         images,
         image: firstImage,
-        price,
-        originalPrice: price,
+        price: sellingPrice,
+        sellingPrice,
+        mrp,
+        originalPrice: mrp,
         discountPrice: Number.isFinite(discountPrice) ? discountPrice : null,
+        activeOffer: product.active_offer ?? product.activeOffer ?? null,
         rating: Number(product.rating || 0),
         total_reviews: Number(product.total_reviews || 0),
         specifications: specs,

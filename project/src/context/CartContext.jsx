@@ -24,9 +24,13 @@ const normalizeCartItem = (item) => {
         name: item.name || 'Product',
         category: item.category,
         price,
+        sellingPrice: Number.isFinite(Number(item.sellingPrice ?? item.selling_price))
+            ? Number(item.sellingPrice ?? item.selling_price)
+            : price,
         originalPrice: Number.isFinite(originalPrice) ? originalPrice : price,
         discountPrice: Number.isFinite(discountPrice) ? discountPrice : undefined,
         offer: item.offer,
+        activeOffer: item.activeOffer ?? item.active_offer,
         image: item.image || '',
         quantity,
         stock: item.stock === undefined ? undefined : Number(item.stock),
@@ -47,9 +51,13 @@ const mergeCartItems = (backendItems, fallbackItems) => {
             ...item,
             name: item.name || fallback?.name,
             price: Number.isFinite(Number(item.price)) && Number(item.price) > 0 ? item.price : fallback?.price,
+            sellingPrice: Number.isFinite(Number(item.sellingPrice ?? item.selling_price)) && Number(item.sellingPrice ?? item.selling_price) > 0
+                ? item.sellingPrice ?? item.selling_price
+                : fallback?.sellingPrice,
             originalPrice: Number.isFinite(Number(item.originalPrice)) && Number(item.originalPrice) > 0 ? item.originalPrice : fallback?.originalPrice,
             discountPrice: Number.isFinite(Number(item.discountPrice)) && Number(item.discountPrice) > 0 ? item.discountPrice : fallback?.discountPrice,
             offer: item.offer || fallback?.offer,
+            activeOffer: item.activeOffer || item.active_offer || fallback?.activeOffer,
             image: item.image || fallback?.image,
         };
     }));

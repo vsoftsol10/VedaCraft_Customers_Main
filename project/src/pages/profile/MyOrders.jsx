@@ -1,374 +1,154 @@
-// import { useEffect, useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import { ShoppingBag, ChevronRight, Package } from 'lucide-react';
-// import { useAuth } from '../../context/AuthContext';
-// import { getOrders } from '../../services/orderStorage';
-// import { useTranslation } from 'react-i18next';
-// const statusStyles = {
-//     Placed: 'text-amber-700 bg-amber-50',
-//     'In Transit': 'text-blue-600 bg-blue-50',
-//     Delivered: 'text-green-600 bg-green-50',
-//     Cancelled: 'text-red-500 bg-red-50',
-// };
-// function formatOrderDate(date) {
-//     return new Date(date).toLocaleDateString('en-IN', {
-//         day: '2-digit',
-//         month: 'short',
-//         year: 'numeric',
-//     });
-// }
-// export default function MyOrders() {
-//     const { t } = useTranslation();
-//     const { user } = useAuth();
-//     const navigate = useNavigate();
-//     const [orders, setOrders] = useState([]);
-//     useEffect(() => {
-//         let isActive = true;
-//         const loadOrders = async () => {
-//             const nextOrders = await getOrders(user?.id);
-//             if (isActive) {
-//                 setOrders(nextOrders);
-//             }
-//         };
-//         void loadOrders();
-//         return () => {
-//             isActive = false;
-//         };
-//     }, [user?.id]);
-//     return (<div className="flex flex-col gap-4">
-//       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-//         <div className="flex items-center gap-2 mb-5">
-//           <ShoppingBag className="w-5 h-5 text-[#2d6a2d]"/>
-//           <h3 className="text-base font-semibold text-gray-900">{t('orders.title')}</h3>
-//         </div>
-
-//         {orders.length === 0 ? (<div className="text-center py-12">
-//             <Package className="w-12 h-12 text-gray-300 mx-auto mb-3"/>
-//             <p className="text-gray-500 font-medium">{t('orders.empty')}</p>
-//             <p className="text-gray-400 text-sm mt-1">{t('orders.emptyDesc')}</p>
-//           </div>) : (<div className="flex flex-col gap-3">
-//             {orders.map((order) => (<div key={order.id} role="button" tabIndex={0} onClick={() => navigate(`/profile/orders/${encodeURIComponent(order.id)}`)} onKeyDown={(event) => {
-//                     if (event.key === 'Enter' || event.key === ' ') {
-//                         event.preventDefault();
-//                         navigate(`/profile/orders/${encodeURIComponent(order.id)}`);
-//                     }
-//                 }} className="flex items-center justify-between p-4 rounded-lg border border-gray-100
-//                            hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer focus:outline-none
-//                            focus:ring-2 focus:ring-[#2d6a2d]/20">
-//                 <div className="flex items-center gap-4 min-w-0">
-//                   <div className="w-10 h-10 rounded-lg bg-[#f0f5ec] flex items-center justify-center flex-shrink-0">
-//                     <Package className="w-5 h-5 text-[#2d6a2d]"/>
-//                   </div>
-//                   <div className="min-w-0">
-//                     <p className="text-sm font-semibold text-gray-900 truncate">{order.product}</p>
-//                     <p className="text-xs text-gray-400 mt-0.5">
-//                       {order.id} &nbsp;·&nbsp; {formatOrderDate(order.createdAt)} &nbsp;·&nbsp; {t('orders.itemCount', { count: order.itemCount })}
-//                     </p>
-//                   </div>
-//                 </div>
-//                 <div className="flex items-center gap-4">
-//                   <div className="text-right hidden sm:block">
-//                     <p className="text-sm font-bold text-gray-900">
-//                       &#8377;{order.total.toLocaleString('en-IN')}
-//                     </p>
-//                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusStyles[order.status]}`}>
-//                       {t(`orders.status.${order.status}`, order.status)}
-//                     </span>
-//                   </div>
-//                   <ChevronRight className="w-4 h-4 text-gray-400"/>
-//                 </div>
-//               </div>))}
-//           </div>)}
-//       </div>
-//     </div>);
-// }
-
-
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, ChevronRight, Package, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ListFilter, MapPin, Package } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getOrders, submitReturnRequest, updateOrderStatus } from '../../services/orderStorage';
-import { useTranslation } from 'react-i18next';
-import ReturnRequestModal from '../../components/Orders/ReturnRequestModal';
+import { getOrders } from '../../services/orderStorage';
+import { getReviewedOrderIds } from '../../services/reviewService';
+import ReviewModal from '../../components/Orders/ReviewModal';
 
-const statusStyles = {
-  Placed: 'text-amber-700 bg-amber-50',
-  Paid: 'text-amber-700 bg-amber-50',
-  Shipped: 'text-indigo-600 bg-indigo-50',
-  'In Transit': 'text-blue-600 bg-blue-50',
-  Delivered: 'text-green-600 bg-green-50',
-  Cancelled: 'text-red-500 bg-red-50',
-  'Return Requested': 'text-purple-600 bg-purple-50',
-};
-
-// Statuses past which an order can no longer be cancelled
-const NON_CANCELLABLE_STATUSES = ['Shipped', 'In Transit', 'Delivered', 'Cancelled', 'Return Requested'];
-
-const RETURN_WINDOW_DAYS = 3;
+const ORDER_STATUS_FILTERS = [
+  { id: 'onTheWay', label: 'On the way', statuses: ['Placed', 'Paid', 'Shipped', 'In Transit', 'Out for Delivery'] },
+  { id: 'delivered', label: 'Delivered', statuses: ['Delivered'] },
+  { id: 'cancelled', label: 'Cancelled', statuses: ['Cancelled'] },
+  { id: 'returned', label: 'Returned', statuses: ['Return Requested'] },
+];
 
 function formatOrderDate(date) {
-  return new Date(date).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+  return new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Days elapsed since delivery, used to gate the return window
-function daysSinceDelivery(deliveredAt) {
-  if (!deliveredAt) return Infinity;
-  const deliveredDate = new Date(deliveredAt);
-  const now = new Date();
-  const diffMs = now - deliveredDate;
-  return diffMs / (1000 * 60 * 60 * 24);
+function getOrderImage(order) {
+  const item = Array.isArray(order.items) ? order.items[0] : null;
+  return item?.image || item?.image_url || item?.imageUrl || '';
 }
 
 export default function MyOrders() {
-  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
-  const [actioningOrderId, setActioningOrderId] = useState(null);
-  const [actionError, setActionError] = useState('');
-  const [cancelOrder, setCancelOrder] = useState(null);
-  const [returnOrder, setReturnOrder] = useState(null);
+  const [reviewOrder, setReviewOrder] = useState(null);
+  const [reviewedOrderIds, setReviewedOrderIds] = useState(() => new Set());
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState([]);
+  const filterRef = useRef(null);
 
   useEffect(() => {
-    let isActive = true;
-    const loadOrders = async () => {
-      const nextOrders = await getOrders(user?.id);
-      if (isActive) {
-        setOrders(nextOrders);
-      }
-    };
-    void loadOrders();
-    return () => {
-      isActive = false;
-    };
+    let active = true;
+    Promise.all([getOrders(user?.id), getReviewedOrderIds()]).then(([nextOrders, reviewedIds]) => {
+      if (!active) return;
+      setOrders(nextOrders);
+      setReviewedOrderIds(new Set(reviewedIds));
+    });
+    return () => { active = false; };
   }, [user?.id]);
 
-  const handleCancelOrder = async (event, order) => {
-    event.stopPropagation();
-    if (NON_CANCELLABLE_STATUSES.includes(order.status)) return;
+  useEffect(() => {
+    if (!isFilterOpen) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) setIsFilterOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [isFilterOpen]);
 
-    setCancelOrder(order);
-  };
+  const toggleFilter = (id) => setActiveFilters((current) =>
+    current.includes(id) ? current.filter((filter) => filter !== id) : [...current, id]
+  );
 
-  const confirmCancelOrder = async () => {
-    if (!cancelOrder) return;
-    const order = cancelOrder;
-    setCancelOrder(null);
-    setActioningOrderId(order.id);
-    setActionError('');
-    const updatedOrder = await updateOrderStatus(order.id, 'Cancelled', user?.id);
-    if (updatedOrder) {
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? updatedOrder : o)));
-    } else {
-      setActionError(t('orders.cancelError', 'Could not cancel the order. Please try again.'));
-    }
-    setActioningOrderId(null);
-  };
-
-  const handleReturnOrder = async (event, order, withinReturnWindow) => {
-    event.stopPropagation();
-    if (!withinReturnWindow) return;
-
-    setReturnOrder(order);
-  };
-
-  const confirmReturnOrder = async (returnRequest) => {
-    if (!returnOrder) return;
-    const order = returnOrder;
-    setActioningOrderId(order.id);
-    setActionError('');
-    const result = await submitReturnRequest(order.id, returnRequest, user?.id);
-    if (result?.order) {
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? result.order : o)));
-      setReturnOrder(null);
-    } else {
-      setActionError(t('orders.returnError', 'Could not process the return. Please try again.'));
-    }
-    setActioningOrderId(null);
-  };
+  const selectedStatuses = activeFilters.length
+    ? new Set(ORDER_STATUS_FILTERS.filter((filter) => activeFilters.includes(filter.id)).flatMap((filter) => filter.statuses))
+    : null;
+  const visibleOrders = selectedStatuses ? orders.filter((order) => selectedStatuses.has(order.status)) : orders;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <div className="flex items-center gap-2 mb-5">
-          <ShoppingBag className="w-5 h-5 text-[#2d6a2d]" />
-          <h3 className="text-base font-semibold text-gray-900">{t('orders.title')}</h3>
+    <div className="w-full">
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-gray-950">
+          <ArrowLeft className="h-5 w-5" />
+          <h1 className="text-xl font-semibold tracking-tight">My Order</h1>
         </div>
 
-        {actionError && (
-          <div className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-            {actionError}
-          </div>
-        )}
-
-        {orders.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">{t('orders.empty')}</p>
-            <p className="text-gray-400 text-sm mt-1">{t('orders.emptyDesc')}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {orders.map((order) => {
-              const isDelivered = order.status === 'Delivered';
-              const isCancelDisabled = NON_CANCELLABLE_STATUSES.includes(order.status);
-              const isBusy = actioningOrderId === order.id;
-
-              // Return is only offered on delivered orders, within the return window
-              const elapsedDays = daysSinceDelivery(order.deliveredAt || order.updatedAt || order.createdAt);
-              const withinReturnWindow = isDelivered && elapsedDays <= RETURN_WINDOW_DAYS;
-              const returnWindowExpired = isDelivered && elapsedDays > RETURN_WINDOW_DAYS;
-
-              return (
-                <div
-                  key={order.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate(`/profile/orders/${encodeURIComponent(order.id)}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      navigate(`/profile/orders/${encodeURIComponent(order.id)}`);
-                    }
-                  }}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border border-gray-100
-                           hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer focus:outline-none
-                           focus:ring-2 focus:ring-[#2d6a2d]/20"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-[#f0f5ec] flex items-center justify-center flex-shrink-0">
-                      <Package className="w-5 h-5 text-[#2d6a2d]" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{order.product}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {order.id} &nbsp;·&nbsp; {formatOrderDate(order.createdAt)} &nbsp;·&nbsp;{' '}
-                        {t('orders.itemCount', { count: order.itemCount })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pl-14 sm:pl-0">
-                    <div className="text-left sm:text-right">
-                      <p className="text-sm font-bold text-gray-900">
-                        &#8377;{order.total.toLocaleString('en-IN')}
-                      </p>
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusStyles[order.status]}`}
-                      >
-                        {t(`orders.status.${order.status}`, order.status)}
-                      </span>
-                    </div>
-
-                    {isDelivered ? (
-                      // Delivered orders show Return instead of Cancel, gated by the 3-day window
-                      (withinReturnWindow || returnWindowExpired) && (
-                        <button
-                          type="button"
-                          disabled={!withinReturnWindow || isBusy}
-                          onClick={(event) => handleReturnOrder(event, order, withinReturnWindow)}
-                          title={
-                            !withinReturnWindow
-                              ? t('orders.returnDisabledTooltip', 'Return window has expired')
-                              : undefined
-                          }
-                          className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors flex-shrink-0 disabled:cursor-not-allowed
-                            ${
-                              withinReturnWindow
-                                ? 'text-[#2d6a2d] border-[#2d6a2d]/30 bg-white hover:bg-[#f0f5ec] cursor-pointer disabled:opacity-60'
-                                : 'text-gray-400 border-gray-200 bg-gray-50'
-                            }`}
-                        >
-                          {isBusy ? t('orders.returning', 'Processing...') : t('orders.return', 'Return')}
-                        </button>
-                      )
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={isCancelDisabled || isBusy}
-                        onClick={(event) => handleCancelOrder(event, order)}
-                        title={
-                          isCancelDisabled
-                            ? t('orders.cancelDisabledTooltip', 'This order can no longer be cancelled')
-                            : undefined
-                        }
-                        className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors flex-shrink-0 disabled:cursor-not-allowed
-                          ${
-                            isCancelDisabled
-                              ? 'text-gray-400 border-gray-200 bg-gray-50'
-                              : 'text-red-600 border-red-200 bg-white hover:bg-red-50 cursor-pointer disabled:opacity-60'
-                          }`}
-                      >
-                        {isBusy ? t('orders.cancelling', 'Cancelling...') : t('orders.cancel', 'Cancel')}
-                      </button>
-                    )}
-
-                    <ChevronRight className="w-4 h-4 text-gray-400 hidden sm:block" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="relative" ref={filterRef}>
+          <button type="button" onClick={() => setIsFilterOpen((open) => !open)} className="flex h-10 items-center gap-1.5 border border-gray-200 bg-white px-3 text-sm text-gray-700 hover:bg-gray-50">
+            <ListFilter className="h-4 w-4" /> Filter
+            {activeFilters.length > 0 && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#2d6a2d] text-[10px] font-semibold text-white">{activeFilters.length}</span>}
+          </button>
+          {isFilterOpen && (
+            <div className="absolute right-0 top-full z-20 mt-2 w-52 border border-gray-200 bg-white p-3 shadow-lg">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-900">Filter</span>
+                <button type="button" onClick={() => setActiveFilters([])} className="text-xs font-medium text-[#2d6a2d] hover:underline">Clear all</button>
+              </div>
+              <p className="mb-2 text-xs font-semibold text-gray-400">ORDER STATUS</p>
+              <div className="space-y-2">
+                {ORDER_STATUS_FILTERS.map((filter) => (
+                  <label key={filter.id} className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" checked={activeFilters.includes(filter.id)} onChange={() => toggleFilter(filter.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-[#2d6a2d] focus:ring-[#2d6a2d]" />
+                    {filter.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {cancelOrder && (
-        <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 px-4"
-          onClick={() => setCancelOrder(null)}
-        >
-          <div
-            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl border border-gray-100"
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cancel-order-title"
-          >
-            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-50">
-              <Package className="h-5 w-5 text-red-600" />
-            </div>
-            <h2 id="cancel-order-title" className="text-center text-lg font-bold text-gray-900">
-              {t('orders.cancelOrder', 'Cancel Order')}
-            </h2>
-            <p className="mt-2 text-center text-sm leading-6 text-gray-500">
-              {t('orders.cancelConfirm', 'Are you sure you want to cancel this order?')}
-            </p>
-            <p className="mt-3 text-center text-xs font-medium text-gray-400">
-              {cancelOrder.product}
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setCancelOrder(null)}
-                className="rounded-md border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+      {orders.length === 0 ? (
+        <div className="border border-gray-300 bg-white py-14 text-center">
+          <Package className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+          <p className="font-medium text-gray-500">No orders yet</p>
+        </div>
+      ) : visibleOrders.length === 0 ? (
+        <div className="border border-gray-300 bg-white py-14 text-center">
+          <ListFilter className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+          <p className="font-medium text-gray-500">No orders match this filter</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {visibleOrders.map((order) => {
+            const isDelivered = order.status === 'Delivered';
+            const image = getOrderImage(order);
+            const deliveryDate = formatOrderDate(order.deliveredAt || order.updatedAt || order.createdAt);
+            const isReviewed = reviewedOrderIds.has(order.id);
+
+            return (
+              <div
+                key={order.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/profile/orders/${encodeURIComponent(order.id)}`)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    navigate(`/profile/orders/${encodeURIComponent(order.id)}`);
+                  }
+                }}
+                className="flex min-h-[112px] cursor-pointer flex-col justify-between gap-4 border border-gray-300 bg-white p-3 transition-colors hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2d6a2d]/20 sm:flex-row sm:items-center sm:p-4"
               >
-                {t('orders.keepOrder', 'Keep Order')}
-              </button>
-              <button
-                type="button"
-                onClick={confirmCancelOrder}
-                className="rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
-              >
-                {t('orders.cancelOrder', 'Cancel Order')}
-              </button>
-            </div>
-          </div>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="h-20 w-20 flex-shrink-0 overflow-hidden bg-[#f7f7f3] sm:h-24 sm:w-24">
+                    {image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><Package className="h-6 w-6 text-[#2d6a2d]" /></div>}
+                  </div>
+                  <p className="max-w-xl text-sm font-semibold leading-5 text-gray-950 sm:text-base">{order.product}</p>
+                </div>
+
+                <div className="flex min-w-[175px] items-center justify-end self-end sm:self-auto">
+                  {isDelivered ? (
+                    <div className="text-right">
+                      <p className="flex items-center justify-end gap-1 text-sm font-medium text-gray-900"><span className="h-2 w-2 rounded-full bg-green-600" />Delivery on {deliveryDate}</p>
+                      <button type="button" disabled={isReviewed} onClick={(event) => { event.stopPropagation(); setReviewOrder(order); }} className="mt-2 text-sm font-medium text-gray-950 hover:text-[#2d6a2d] disabled:text-gray-400">{isReviewed ? 'Reviewed' : 'Rate & Review'}</button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={(event) => { event.stopPropagation(); navigate(`/profile/orders/${encodeURIComponent(order.id)}`); }} className="inline-flex items-center gap-2 border border-[#58c52a] px-4 py-2 text-sm font-medium text-[#35a51b] hover:bg-green-50"><MapPin className="h-4 w-4" />Track Order</button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {returnOrder && (
-        <ReturnRequestModal
-          order={returnOrder}
-          isSubmitting={actioningOrderId === returnOrder.id}
-          onClose={() => setReturnOrder(null)}
-          onSubmit={confirmReturnOrder}
-        />
-      )}
+      {reviewOrder && <ReviewModal order={reviewOrder} onClose={() => setReviewOrder(null)} onSubmitted={(orderId) => { setReviewedOrderIds((current) => new Set([...current, orderId])); setReviewOrder(null); }} />}
     </div>
   );
 }
