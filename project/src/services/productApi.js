@@ -88,3 +88,11 @@ export const getProductDetails = async (idOrSlug) => {
     const payload = await request(`/products/${encodeURIComponent(idOrSlug)}/details`);
     return payload.data;
 };
+export const getProductReviews = async (id) => {
+    const payload = await request(`/products/${encodeURIComponent(id)}/reviews`);
+    return Array.isArray(payload.data) ? payload.data : [];
+};
+export const getProductStore = async (id) => {
+    const payload = await request(`/products/${encodeURIComponent(id)}/store`);
+    return payload.data || null;
+};

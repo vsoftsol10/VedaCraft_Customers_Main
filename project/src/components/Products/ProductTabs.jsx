@@ -1,4 +1,17 @@
 import { useState } from 'react';
+
+const toPoints = (value) => {
+    if (Array.isArray(value)) return value.filter(Boolean).map(String);
+    if (typeof value !== 'string' || !value.trim()) return [];
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed.filter(Boolean).map(String) : [String(parsed)];
+    }
+    catch {
+        return [value.trim()];
+    }
+};
+
 export default function ProductTabs({ description, howToUse, coreInstructions, }) {
     const [activeTab, setActiveTab] = useState('Description');
     const tabs = ['Description', 'How to Use', 'Core instructions'];
@@ -18,12 +31,15 @@ export default function ProductTabs({ description, howToUse, coreInstructions, }
         {activeTab === 'Description' && (<div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
             {description}
           </div>)}
-        {activeTab === 'How to Use' && (<div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-            {howToUse}
-          </div>)}
-        {activeTab === 'Core instructions' && (<div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-            {coreInstructions}
-          </div>)}
+        {activeTab === 'How to Use' && (<Points items={toPoints(howToUse)} />)}
+        {activeTab === 'Core instructions' && (<Points items={toPoints(coreInstructions)} />)}
       </div>
     </div>);
+}
+
+function Points({ items }) {
+    if (items.length === 0) return <p className="text-sm text-gray-500">No instructions available.</p>;
+    return <ul className="space-y-3 text-sm leading-relaxed text-gray-700">
+      {items.map((item, index) => <li key={`${item}-${index}`} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" />{item}</li>)}
+    </ul>;
 }

@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Star, Share2, Leaf, HeartPulse, Sparkles, Sprout, Minus, Plus, ShieldCheck, Flame, Droplets, Wind, Gem, Palette, Recycle, Sun, Package, Coffee, Flower2, Zap, Award, HandHeart, Shirt } from 'lucide-react';
+import { ChevronRight, Star, Share2, Leaf, HeartPulse, Sparkles, Sprout, Minus, Plus, ShieldCheck, Flame, Droplets, Wind, Gem, Palette, Recycle, Sun, Package, Coffee, Flower2, Zap, Award, HandHeart, Shirt, Store } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ProductTabs from '../components/Products/ProductTabs';
@@ -8,7 +8,7 @@ import ProductSection from '../components/Products/ProductSection';
 import WishlistButton from '../components/Products/WishlistButton';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { getProductBySlug, getProductDetails, getProductsByCategory, searchProducts } from '../services/productApi';
+import { getProductBySlug, getProductDetails, getProductReviews, getProductStore, getProductsByCategory, searchProducts } from '../services/productApi';
 import { mapApiProductToProduct } from '../types/product';
 import { allProducts } from '../data/allProducts';
 import { getProductPricing, isOfferActive } from '../utils/pricing';
@@ -459,6 +459,7 @@ function getProductHighlights(category) {
         { icon: <Recycle className={iconClass}/>, title: 'Sustainable', desc: 'Eco-conscious and biodegradable' },
     ];
 }
+/* Legacy placeholder reviews retained only as source history; live reviews load below.
 const mockReviews = [
     {
         id: 'r1',
@@ -482,6 +483,7 @@ const mockReviews = [
         content: "Beautiful brush, but I wish the bristles were a bit softer. Still, amazing eco-friendly alternative!",
     },
 ];
+*/
 export default function ProductDetailsPage() {
     const { id } = useParams();
     const { t } = useTranslation();
@@ -492,6 +494,8 @@ export default function ProductDetailsPage() {
     const [productDetail, setProductDetail] = useState(null);
     const [loading, setLoading] = useState(true);
     const [similarProducts, setSimilarProducts] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [store, setStore] = useState(null);
     const [recentlyViewed, setRecentlyViewed] = useState([]);
     const [quantity, setQuantity] = useState(1);
     const [pincode, setPincode] = useState('');
@@ -499,6 +503,9 @@ export default function ProductDetailsPage() {
     const [pincodeStatus, setPincodeStatus] = useState({ type: '', message: '' });
     const [checkingPincode, setCheckingPincode] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const reviewRating = reviews.length > 0
+        ? (reviews.reduce((total, review) => total + Number(review.rating || 0), 0) / reviews.length).toFixed(1)
+        : product?.rating;
     const fallbackContent = product ? getProductContent(product.category, product.name) : null;
     const tabDescription = productDetail?.full_description || fallbackContent?.description || '';
     const tabHowToUse = productDetail?.how_to_use || fallbackContent?.howToUse || '';
@@ -532,7 +539,7 @@ export default function ProductDetailsPage() {
                     };
                 if (mounted) {
                     setProduct(productWithImageFallback);
-                    const [details, relatedResponse] = await Promise.all([
+                    const [details, relatedResponse, productReviews, storeDetails] = await Promise.all([
                         getProductDetails(mapped.slug || mapped.id).catch((error) => {
                             console.warn('Product details API failed:', error);
                             return null;
@@ -543,10 +550,20 @@ export default function ProductDetailsPage() {
                                 return { products: [] };
                             })
                             : Promise.resolve({ products: [] }),
+                        getProductReviews(mapped.id).catch((error) => {
+                            console.warn('Product reviews API failed:', error);
+                            return [];
+                        }),
+                        getProductStore(mapped.id).catch((error) => {
+                            console.warn('Store details API failed:', error);
+                            return null;
+                        }),
                     ]);
                     if (!mounted)
                         return;
                     setProductDetail(details);
+                    setReviews(productReviews);
+                    setStore(storeDetails);
                     setSimilarProducts((relatedResponse.products || [])
                         .map((p) => mapApiProductToProduct(p))
                         .filter((p) => p.id !== mapped.id && p.slug !== mapped.slug)
@@ -565,6 +582,8 @@ export default function ProductDetailsPage() {
                     setProduct(null);
                     setProductDetail(null);
                     setSimilarProducts([]);
+                    setReviews([]);
+                    setStore(null);
                 }
             }
             finally {
@@ -687,13 +706,13 @@ export default function ProductDetailsPage() {
               {[0, 1, 2, 3].map((index) => {
                 const thumbnailImage = galleryImages[index] || galleryImages[0] || product.image;
                 const isSelected = index === selectedImageIndex;
-                return (<button key={index} type="button" onClick={() => setSelectedImageIndex(index)} className={`bg-white border rounded-md overflow-hidden cursor-pointer transition-colors ${isSelected ? 'border-green-600 ring-2 ring-green-100' : 'border-gray-200 hover:border-green-500'}`} aria-label={`Show product image ${index + 1}`}>
-                   <img src={thumbnailImage} alt={`${t(`productsData.${product.name}`, product.name)} thumbnail ${index + 1}`} className="h-16 w-16 object-cover sm:h-auto sm:w-full"/>
+                return (<button key={index} type="button" onClick={() => setSelectedImageIndex(index)} className={`h-16 w-16 shrink-0 bg-white border rounded-md overflow-hidden cursor-pointer transition-colors sm:h-20 sm:w-20 ${isSelected ? 'border-green-600 ring-2 ring-green-100' : 'border-gray-200 hover:border-green-500'}`} aria-label={`Show product image ${index + 1}`}>
+                   <img src={thumbnailImage} alt={`${t(`productsData.${product.name}`, product.name)} thumbnail ${index + 1}`} className="h-full w-full object-cover"/>
                 </button>);
               })}
             </div>
-            <div className="flex-1 flex items-start justify-center relative">
-               <img src={primaryImage} alt={t(`productsData.${product.name}`, product.name)} className="w-full h-auto rounded-xl object-contain shadow-sm border border-gray-100"/>
+            <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-gray-100 bg-gray-50 shadow-sm">
+               <img src={primaryImage} alt={t(`productsData.${product.name}`, product.name)} className="h-full w-full object-cover"/>
                {isOutOfStock && (<div className="absolute left-4 top-4 rounded bg-red-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm">
                  Out of stock
                </div>)}
@@ -718,24 +737,19 @@ export default function ProductDetailsPage() {
             {/* Rating */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <div className="flex items-center bg-green-700 text-white px-2 py-0.5 rounded text-sm font-medium">
-                {product.rating} <Star className="w-3.5 h-3.5 fill-white ml-1"/>
+                {reviewRating} <Star className="w-3.5 h-3.5 fill-white ml-1"/>
               </div>
              
-              <span className="text-sm text-blue-600">(1,248 {t('product.reviews')})</span>
+              <span className="text-sm text-blue-600">({reviews.length} {t('product.reviews')})</span>
             </div>
 
             {/* Price */}
             <div className="mb-6">
-              <div className="flex flex-wrap items-end gap-3">
-                <span className="text-sm font-medium text-gray-600 mb-1">Selling price</span>
-                <span className="text-3xl font-bold text-gray-900">&#8377; {displayPrice}</span>
-                {pricing.hasDiscount && (<span className="text-lg text-gray-400 line-through mb-1">MRP &#8377; {pricing.mrp}</span>)}
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-3xl font-bold tracking-tight text-gray-900">&#8377;{displayPrice}</span>
+                {pricing.hasDiscount && (<span className="text-base text-gray-400 line-through">&#8377;{pricing.mrp}</span>)}
+                {pricing.hasDiscount && (<span className="text-sm font-semibold text-green-600">{pricing.discountPercent}% OFF</span>)}
               </div>
-              {pricing.hasDiscount && (
-                <p className="mt-1 text-sm font-semibold text-green-600">
-                  You save &#8377; {pricing.discountAmount} ({pricing.discountPercent}% off)
-                </p>
-              )}
             </div>
             {/* <p className={`mb-4 text-sm font-semibold ${isOutOfStock ? 'text-red-600' : 'text-green-700'}`}>
               {isOutOfStock ? 'Out of stock' : `${stockQuantity} in stock`}
@@ -832,8 +846,8 @@ export default function ProductDetailsPage() {
               </button>
             </div>
 
-            {/* Delivery Location */}
-            <div className="border-t border-gray-100 pt-6">
+            {/* Delivery location is handled during checkout. */}
+            {false && (<div className="border-t border-gray-100 pt-6">
               <h3 className="font-semibold text-gray-900 mb-2">{t('product.deliveryLocation')}</h3>
               <p className="text-sm text-gray-600 mb-4">{t('product.deliveryLocationDesc')}</p>
               {/* Pincode Input Row */}
@@ -885,7 +899,30 @@ export default function ProductDetailsPage() {
                     </div>
                   </div>
                 </div>)}
-            </div>
+            </div>)}
+
+            {store && (<section className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+              <h3 className="mb-4 text-base font-bold text-gray-900">Sold by</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                  <Store className="h-7 w-7" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-semibold text-gray-900">{store.name}</p>
+                  <span className="mt-1 inline-flex rounded bg-fuchsia-50 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-700">Trusted seller</span>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+                <div>
+                  <div className="flex items-center gap-1 text-sm font-bold text-gray-900">{Number(store.average_rating || 0).toFixed(1)} <Star className="h-3.5 w-3.5 fill-blue-500 text-blue-500" /></div>
+                  <p className="mt-1 text-sm text-gray-500">{Number(store.ratings_count || 0).toLocaleString('en-IN')} ratings</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{Number(store.product_count || 0).toLocaleString('en-IN')}</p>
+                  <p className="mt-1 text-sm text-gray-500">Products</p>
+                </div>
+              </div>
+            </section>)}
 
           </div>
         </div>
@@ -911,10 +948,10 @@ export default function ProductDetailsPage() {
 
         {/* Reviews Section */}
         <div className="mt-16 mb-16">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">{t('product.review')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {mockReviews.map((review) => (<ReviewCard key={review.id} review={review}/>))}
-          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-6">{t('product.review')} {reviews.length > 0 && `(${reviews.length})`}</h2>
+          {reviews.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {reviews.map((review) => (<ReviewCard key={review.id} review={review}/>))}
+          </div> : <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-5 py-6 text-sm text-gray-500">No customer reviews yet. Be the first to review this product after delivery.</p>}
         </div>
 
       </div>

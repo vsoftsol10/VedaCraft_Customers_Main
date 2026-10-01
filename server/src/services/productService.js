@@ -4,7 +4,7 @@ import { getActiveOffersByProductId } from './offerService.js';
 
 // The seller catalog belongs to the primary Supabase project (SUPABASE_URL).
 const getProductClient = () => supabaseAdmin || supabase;
-const PRODUCT_COLUMNS = `id, product_id, product_name, category, sub_category, material, weight, description, benefits, highlights, length, width, height, mrp, discount_price, selling_price, cover_image, additional_images, sku, stock_quantity, low_stock_alert, stock_status, how_to_use, care_instruction, seller_id, created_at, updated_at`;
+const PRODUCT_COLUMNS = `id, product_id, product_name, category, sub_category, material, weight, description, benefits, highlights, length, width, height, mrp, discount_price, selling_price, cover_image, additional_images, sku, stock_quantity, low_stock_alert, stock_status, how_to_use, care_instruction, seller_id, is_active, created_at, updated_at`;
 
 const CATEGORY_ALIASES = new Map([
   ['wellness', 'Wellness'], ['food', 'Food'], ['organic-food', 'Food'], ['craft', 'Craft'],
@@ -17,7 +17,19 @@ const normalizeCategory = (value) => {
   if (!category) return undefined;
   return CATEGORY_ALIASES.get(category.toLowerCase().replaceAll('_', '-').replace(/\s+/g, '-')) || category;
 };
-const ensureArray = (value) => Array.isArray(value) ? value.filter(Boolean) : (typeof value === 'string' && value.trim() ? [value.trim()] : []);
+const ensureArray = (value) => {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== 'string' || !value.trim()) return [];
+
+  // Seller fields may contain a JSON array saved as text (for example,
+  // ["Sustainable material", "Handcrafted"]). Return its individual items.
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [parsed].filter(Boolean);
+  } catch {
+    return [value.trim()];
+  }
+};
 const toCategorySlug = (category) => {
   const normalized = normalizeCategory(category);
   if (normalized === 'Decor Items') return 'decor';
@@ -41,7 +53,7 @@ export const toProductDto = (product, activeOffer = null) => {
     slug: String(product.product_id || product.id), short_description: product.description || '',
     description: product.description || '', price: sellingPrice, base_selling_price: sellingPrice, mrp, selling_price: sellingPrice,
     original_price: mrp, discount_price: discountPrice, stock, quantity: stock,
-    rating: 4.5, total_reviews: 0, is_featured: false, is_active: product.stock_status !== 'Out of Stock',
+    rating: 4.5, total_reviews: 0, is_featured: false, is_active: Boolean(product.is_active),
     image: images[0] || '', images, image_public_ids: [], offer: activeOffer || legacyOffer, active_offer: activeOffer, status: product.stock_status,
     product_highlights: ensureArray(product.highlights), highlights: ensureArray(product.highlights),
     specifications: {
@@ -73,11 +85,27 @@ const applyFilters = (query, filters) => {
 };
 const sortColumn = (value) => ({ price: 'selling_price', name: 'product_name', quantity: 'stock_quantity', status: 'stock_status' }[value] || value);
 
+const getActiveSellerIds = async () => {
+  const { data, error } = await getProductClient()
+    .from('seller_applications')
+    .select('id')
+    .eq('is_selling_active', true);
+  if (error) throw new AppError(error.message, 500);
+  return (data || []).map((seller) => String(seller.id));
+};
+
+const applyCatalogVisibility = (query, activeSellerIds) =>
+  query.eq('is_active', true).in('seller_id', activeSellerIds);
+
 export const getProducts = async (filters) => {
   const from = (filters.page - 1) * filters.limit;
   const to = from + filters.limit - 1;
+  const activeSellerIds = await getActiveSellerIds();
+  if (!activeSellerIds.length) {
+    return { products: [], meta: paginationMeta({ page: filters.page, limit: filters.limit, count: 0 }) };
+  }
   let query = getProductClient().from('seller_products').select(PRODUCT_COLUMNS, { count: 'exact' });
-  query = applyFilters(query, filters).order(sortColumn(filters.sortBy), { ascending: filters.sortOrder === 'asc' }).range(from, to);
+  query = applyCatalogVisibility(applyFilters(query, filters), activeSellerIds).order(sortColumn(filters.sortBy), { ascending: filters.sortOrder === 'asc' }).range(from, to);
   const { data, error, count } = await query;
   if (error) throw new AppError(error.message, 500);
   let offersByProductId = new Map();
@@ -88,8 +116,10 @@ export const getProducts = async (filters) => {
 export const getProductByIdOrSlug = async (idOrSlug) => {
   const value = String(idOrSlug).trim();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  const activeSellerIds = await getActiveSellerIds();
+  if (!activeSellerIds.length) return null;
   let query = getProductClient().from('seller_products').select(PRODUCT_COLUMNS).limit(1);
-  query = isUuid ? query.eq('id', value) : query.eq('product_id', value);
+  query = applyCatalogVisibility(isUuid ? query.eq('id', value) : query.eq('product_id', value), activeSellerIds);
   const { data, error } = await query.maybeSingle();
   if (error) throw new AppError(error.message, 500);
   let activeOffer = null;
@@ -100,7 +130,12 @@ export const getProductByIdOrSlug = async (idOrSlug) => {
 export const getProductDtosByIds = async (ids = []) => {
   const productIds = [...new Set(ids.map((id) => String(id || '').trim()).filter(Boolean))];
   if (!productIds.length) return new Map();
-  const { data, error } = await getProductClient().from('seller_products').select(PRODUCT_COLUMNS).in('id', productIds);
+  const activeSellerIds = await getActiveSellerIds();
+  if (!activeSellerIds.length) return new Map();
+  const { data, error } = await applyCatalogVisibility(
+    getProductClient().from('seller_products').select(PRODUCT_COLUMNS).in('id', productIds),
+    activeSellerIds
+  );
   if (error) throw new AppError(error.message, 500);
   let offersByProductId = new Map();
   try { offersByProductId = await getActiveOffersByProductId(data || []); }
