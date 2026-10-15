@@ -11,6 +11,22 @@ const toQueryString = (query = {}) => {
     const queryString = params.toString();
     return queryString ? `?${queryString}` : '';
 };
+// A location is optional: without one, no city/state is sent and the complete
+// catalog remains visible.
+const getSelectedLocationQuery = () => {
+    if (typeof window === 'undefined') return {};
+    try {
+        const location = JSON.parse(localStorage.getItem('vc_selected_location') || 'null');
+        if (!location || location.type === 'none') return {};
+        const city = location.city || location.text?.split(' - ')[0]?.trim();
+        return {
+            ...(city && city !== 'Detecting...' && city !== 'Select location' && city !== 'India' ? { city } : {}),
+            ...(location.state ? { state: location.state } : {}),
+        };
+    } catch {
+        return {};
+    }
+};
 const normalizeProduct = (product) => {
     const images = Array.isArray(product.images) ? product.images : [];
     const firstImage = product.image || images[0] || '';
@@ -46,7 +62,7 @@ const request = async (path) => {
     return payload;
 };
 export const getProducts = async (query) => {
-    const payload = await request(`/products${toQueryString(query)}`);
+    const payload = await request(`/products${toQueryString({ ...getSelectedLocationQuery(), ...query })}`);
     return {
         products: payload.data.map(normalizeProduct),
         meta: payload.meta,
@@ -75,7 +91,7 @@ export const getProductBySlug = async (slug) => {
     return normalizeProduct(payload.data);
 };
 export const getProductsByCategory = async (category, query) => {
-    const payload = await request(`/products/category/${encodeURIComponent(category)}${toQueryString(query)}`);
+    const payload = await request(`/products/category/${encodeURIComponent(category)}${toQueryString({ ...getSelectedLocationQuery(), ...query })}`);
     return {
         products: payload.data.map(normalizeProduct),
         meta: payload.meta,

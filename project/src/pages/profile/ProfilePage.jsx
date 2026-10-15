@@ -69,7 +69,7 @@ const sidebarItems = [
     { labelKey: 'profile.sidebar.myProfile', to: '/profile', icon: User },
     { labelKey: 'profile.sidebar.myOrders', to: '/profile/orders', icon: ShoppingBag },
     { labelKey: 'profile.sidebar.mySizeProfile', to: '/profile/size-profile', icon: Ruler },
-    { labelKey: 'profile.sidebar.myEcoImpact', to: '/profile/eco-impact', icon: Leaf },
+    // { labelKey: 'profile.sidebar.myEcoImpact', to: '/profile/eco-impact', icon: Leaf },
     { labelKey: 'profile.sidebar.notifications', to: '/profile/notifications', icon: Bell },
     { labelKey: 'profile.sidebar.address', to: '/profile/address', icon: MapPin },
     { labelKey: 'profile.sidebar.helpSupport', to: '/profile/help', icon: HelpCircle },

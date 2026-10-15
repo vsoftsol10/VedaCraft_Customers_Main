@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 const AuthContext = createContext(undefined);
+// Browsing starts with the complete catalog. A location becomes active only
+// after the customer explicitly chooses one from the header.
+const AUTO_DETECT_LOCATION = false;
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
         const saved = localStorage.getItem('vc_user');
@@ -13,7 +16,7 @@ export const AuthProvider = ({ children }) => {
         const saved = localStorage.getItem('vc_selected_location');
         if (saved)
             return JSON.parse(saved);
-        return { type: 'pincode', value: '', text: 'Detecting...' };
+        return { type: 'none', value: '', text: 'Select location' };
     });
     const hasAutoDetected = useRef(false);
     // ─── Fetch addresses directly from Supabase ───────────────────────────────
@@ -109,6 +112,8 @@ export const AuthProvider = ({ children }) => {
     
     // ─── Auto Detect Location on first visit ─────────────────────────────────
     useEffect(() => {
+        if (!AUTO_DETECT_LOCATION)
+            return;
         const alreadySaved = localStorage.getItem('vc_selected_location');
         if (alreadySaved || hasAutoDetected.current)
             return;

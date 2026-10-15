@@ -1,5 +1,6 @@
 {
-  "message": "Could not find the 'status_history' column of 'orders' in the schema cache",
-  "path": "/api/v1/orders",
-  "method": "POST"
+  "message": "TypeError: fetch failed",
+  "stack": "AppError: TypeError: fetch failed\n    at getActiveSellerIds (file:///C:/Users/acer/Desktop/VedaCraft_Customers_Main/server/src/services/productService.js:93:20)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Module.getProducts (file:///C:/Users/acer/Desktop/VedaCraft_Customers_Main/server/src/services/productService.js:117:27)\n    at async getProducts (file:///C:/Users/acer/Desktop/VedaCraft_Customers_Main/server/src/controllers/productController.js:6:32)",
+  "path": "/api/v1/products",
+  "method": "GET"
 }

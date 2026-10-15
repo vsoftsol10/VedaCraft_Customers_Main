@@ -10,7 +10,7 @@ const CATEGORY_ALIASES = new Map([
   ['wellness', 'Wellness'], ['food', 'Food'], ['organic-food', 'Food'], ['craft', 'Craft'],
   ['artisan-crafts', 'Craft'], ['fashion', 'Fashion'], ['sustainable-fashion', 'Fashion'],
   ['decor', 'Decor Items'], ['decor-items', 'Decor Items'], ['home-decor-items', 'Decor Items'],
-  ['seller', 'Seller'], ['eco', 'Seller'], ['eco-friendly-products', 'Seller'],
+  ['seller', 'Seller'], ['eco', 'Eco'], ['eco-friendly-products', 'Eco'],
 ]);
 const normalizeCategory = (value) => {
   const category = String(value || '').trim();
@@ -94,6 +94,20 @@ const getActiveSellerIds = async () => {
   return (data || []).map((seller) => String(seller.id));
 };
 
+// Selling locations are managed in the seller application. A product is
+// visible only when its seller serves the customer's selected city/state.
+const getSellerIdsForLocation = async ({ city, state }) => {
+  if (!city && !state) return null;
+
+  let query = getProductClient().from('seller_selling_locations').select('seller_id');
+  if (city) query = query.ilike('city', city);
+  if (state) query = query.ilike('state', state);
+
+  const { data, error } = await query;
+  if (error) throw new AppError(error.message, 500);
+  return [...new Set((data || []).map((location) => String(location.seller_id)))];
+};
+
 const applyCatalogVisibility = (query, activeSellerIds) =>
   query.eq('is_active', true).in('seller_id', activeSellerIds);
 
@@ -101,11 +115,15 @@ export const getProducts = async (filters) => {
   const from = (filters.page - 1) * filters.limit;
   const to = from + filters.limit - 1;
   const activeSellerIds = await getActiveSellerIds();
-  if (!activeSellerIds.length) {
+  const locationSellerIds = await getSellerIdsForLocation(filters);
+  const visibleSellerIds = locationSellerIds === null
+    ? activeSellerIds
+    : activeSellerIds.filter((sellerId) => locationSellerIds.includes(sellerId));
+  if (!visibleSellerIds.length) {
     return { products: [], meta: paginationMeta({ page: filters.page, limit: filters.limit, count: 0 }) };
   }
   let query = getProductClient().from('seller_products').select(PRODUCT_COLUMNS, { count: 'exact' });
-  query = applyCatalogVisibility(applyFilters(query, filters), activeSellerIds).order(sortColumn(filters.sortBy), { ascending: filters.sortOrder === 'asc' }).range(from, to);
+  query = applyCatalogVisibility(applyFilters(query, filters), visibleSellerIds).order(sortColumn(filters.sortBy), { ascending: filters.sortOrder === 'asc' }).range(from, to);
   const { data, error, count } = await query;
   if (error) throw new AppError(error.message, 500);
   let offersByProductId = new Map();

@@ -7,6 +7,7 @@ export const getNotifications = async (userId, token) => {
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
+    .eq('audience', 'customer')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -20,7 +21,8 @@ export const markAsRead = async (userId, id, token) => {
     .from('notifications')
     .update({ is_read: true })
     .eq('id', id)
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .eq('audience', 'customer');
 
   if (error) throw new AppError(error.message, 500);
   return getNotifications(userId, token);
@@ -32,10 +34,23 @@ export const markAllAsRead = async (userId, token) => {
     .from('notifications')
     .update({ is_read: true })
     .eq('user_id', userId)
+    .eq('audience', 'customer')
     .eq('is_read', false);
 
   if (error) throw new AppError(error.message, 500);
   return getNotifications(userId, token);
+};
+
+export const clearCustomerNotifications = async (userId, token) => {
+  const supabase = createScopedClient(token);
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('user_id', userId)
+    .eq('audience', 'customer');
+
+  if (error) throw new AppError(error.message, 500);
+  return [];
 };
 
 /**
@@ -48,6 +63,7 @@ export const createOrderNotification = async ({ userId, orderId, title, message 
   const { error } = await supabaseAdmin.from('notifications').insert({
     user_id: userId,
     type: 'order',
+    audience: 'customer',
     title,
     message,
     order_id: orderId,

@@ -52,4 +52,15 @@ export const markAllAsRead = async (tokenOverride) => {
     return Array.isArray(payload.data) ? payload.data : [];
 };
 
-export default { getNotifications, markAsRead, markAllAsRead };
+export const clearNotifications = async (tokenOverride) => {
+    const token = tokenOverride ?? await getToken();
+    if (!token) throw new Error('Please sign in');
+    const res = await fetch(`${API_BASE_URL}/notifications`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    });
+    const payload = await handleResponse(res);
+    return Array.isArray(payload.data) ? payload.data : [];
+};
+
+export default { getNotifications, markAsRead, markAllAsRead, clearNotifications };

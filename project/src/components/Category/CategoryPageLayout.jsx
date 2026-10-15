@@ -7,9 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { getProductPricing } from '../../utils/pricing';
-function FilterSection({ title, items, selected, onToggle, }) {
+import { useAuth } from '../../context/AuthContext';
+function FilterSection({ title, items, selected, onToggle, formatItem = (item) => item }) {
     const [open, setOpen] = useState(true);
-    const { t } = useTranslation();
     return (<div className="border-b border-gray-100 pb-4 mb-4">
       <button className="flex items-center justify-between w-full mb-3 text-sm font-semibold text-gray-800" onClick={() => setOpen((o) => !o)}>
         {title}
@@ -18,7 +18,7 @@ function FilterSection({ title, items, selected, onToggle, }) {
       {open && (<div className="space-y-2">
           {items.map((item) => (<label key={item} className="flex items-center gap-2 cursor-pointer group">
               <input type="checkbox" checked={selected.includes(item)} onChange={() => onToggle(item)} className="accent-green-600 w-4 h-4 rounded"/>
-              <span className="text-sm text-gray-600 group-hover:text-green-700 transition-colors">{t(`filtersData.${item}`, item)}</span>
+              <span className="text-sm text-gray-600 group-hover:text-green-700 transition-colors">{formatItem(item)}</span>
             </label>))}
         </div>)}
     </div>);
@@ -99,8 +99,9 @@ function ProductCard({ product }) {
       </div>
     </div>);
 }
-export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, products: initialProducts, apiCategory, categories = [], features = [], discounts = [], }) {
+export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, products: initialProducts, apiCategory }) {
     const { t } = useTranslation();
+    const { selectedLocation } = useAuth();
     const pageKeyMap = {
         'Eco-Friendly Products': 'eco',
         'Wellness Products': 'wellness',
@@ -114,8 +115,7 @@ export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, pr
     const [products, setProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filters, setFilters] = useState({
-        categories: [],
-        features: [],
+        subCategories: [],
         discounts: [],
         priceMax: 5000,
         inStock: false,
@@ -139,7 +139,7 @@ export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, pr
                 };
                 const categorySlug = apiCategory || categoryMap[title] || title.toLowerCase();
                 // Fetch products only for this category from the backend
-                const response = await getProductsByCategory(categorySlug);
+                const response = await getProductsByCategory(categorySlug, { limit: 100 });
                 const apiProducts = response.products;
                 // Map API products to frontend domain model (camelCase)
                 const domainApiProducts = apiProducts.map((p) => mapApiProductToProduct(p));
@@ -160,28 +160,30 @@ export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, pr
         return () => {
             mounted = false;
         };
-    }, [apiCategory, initialProducts, title]);
+    }, [apiCategory, initialProducts, title, selectedLocation]);
     const toggleFilter = (key, item) => {
         setFilters((f) => ({
             ...f,
             [key]: f[key].includes(item) ? f[key].filter((x) => x !== item) : [...f[key], item],
         }));
     };
-    const clearAll = () => setFilters({ categories: [], features: [], discounts: [], priceMax: 5000, inStock: false, outOfStock: false });
-    const activeFiltersCount = filters.categories.length + filters.features.length + filters.discounts.length +
+    const clearAll = () => setFilters({ subCategories: [], discounts: [], priceMax: 5000, inStock: false, outOfStock: false });
+    const activeFiltersCount = filters.subCategories.length + filters.discounts.length +
         (filters.inStock ? 1 : 0) + (filters.outOfStock ? 1 : 0);
+    const subCategories = useMemo(() => [...new Set(products
+        .map((product) => product.specifications?.subCategory)
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b)), [products]);
+    const discountOptions = useMemo(() => [10, 20, 30, 40, 50, 60, 80]
+        .filter((minimum) => products.some((product) => {
+            const pricing = getProductPricing(product);
+            return pricing.mrp > 0 && ((pricing.mrp - pricing.salePrice) / pricing.mrp) * 100 >= minimum;
+        })), [products]);
     const filteredProducts = useMemo(() => {
-        const stableIndex = (value, modulo) => {
-            if (!modulo)
-                return 0;
-            const numericValue = Number(value);
-            if (Number.isFinite(numericValue))
-                return numericValue % modulo;
-            return String(value || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % modulo;
-        };
         const filtered = products.filter((product) => {
-            // 1. Category
-            if (filters.categories.length > 0 && !filters.categories.includes(product.category)) {
+            // 1. Sub-category comes directly from seller_products.sub_category.
+            const subCategory = product.specifications?.subCategory;
+            if (filters.subCategories.length > 0 && !filters.subCategories.includes(subCategory)) {
                 return false;
             }
             // 2. Price
@@ -196,20 +198,13 @@ export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, pr
                 return false;
             if (filters.outOfStock && !filters.inStock && !isOutOfStock)
                 return false;
-            // 4. Features
-            if (filters.features.length > 0) {
-                const productIndex = stableIndex(product.id, features.length);
-                const feature1 = features[productIndex];
-                const feature2 = features[(productIndex * 2) % features.length];
-                const productFeatures = [feature1, feature2];
-                const hasFeature = filters.features.some(f => productFeatures.includes(f));
-                if (!hasFeature)
-                    return false;
-            }
-            // 5. Discount
+            // 4. Discount is calculated from the product's MRP and selling price.
             if (filters.discounts.length > 0) {
-                const productDiscount = product.offer || discounts[stableIndex(product.id, discounts.length)];
-                if (!filters.discounts.includes(productDiscount))
+                const pricing = getProductPricing(product);
+                const discountPercent = pricing.mrp > 0
+                    ? ((pricing.mrp - pricing.salePrice) / pricing.mrp) * 100
+                    : 0;
+                if (!filters.discounts.some((minimum) => discountPercent >= minimum))
                     return false;
             }
             return true;
@@ -227,7 +222,7 @@ export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, pr
         }
         // 'featured' keeps original order
         return sorted;
-    }, [products, filters, features, discounts, sortBy]);
+    }, [products, filters, sortBy]);
     const FilterPanel = () => (<aside className="w-full space-y-1">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
@@ -248,9 +243,8 @@ export default function CategoryPageLayout({ title, icon: Icon = ShoppingBag, pr
         </div>
       </div>
 
-      <FilterSection title={t('filter.category')} items={categories} selected={filters.categories} onToggle={(item) => toggleFilter('categories', item)}/>
-      <FilterSection title={t('filter.features')} items={features} selected={filters.features} onToggle={(item) => toggleFilter('features', item)}/>
-      <FilterSection title={t('filter.discount')} items={discounts} selected={filters.discounts} onToggle={(item) => toggleFilter('discounts', item)}/>
+      <FilterSection title="Sub-category" items={subCategories} selected={filters.subCategories} onToggle={(item) => toggleFilter('subCategories', item)}/>
+      <FilterSection title={t('filter.discount')} items={discountOptions} selected={filters.discounts} onToggle={(item) => toggleFilter('discounts', item)} formatItem={(minimum) => `${minimum}% off & above`}/>
 
       <div className="pb-4">
         <p className="text-sm font-semibold text-gray-800 mb-3">{t('filter.availability')}</p>

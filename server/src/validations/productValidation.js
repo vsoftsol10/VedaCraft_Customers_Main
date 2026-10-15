@@ -38,6 +38,8 @@ export const validateProductQuery = (req, _res, next) => {
     inStock,
     featured,
     status,
+    city,
+    state,
   } = req.query;
 
   const normalizedSortBy = String(sortBy);
@@ -62,6 +64,8 @@ export const validateProductQuery = (req, _res, next) => {
     inStock: toBoolean(inStock),
     featured: toBoolean(featured),
     status: status ? String(status).trim() : undefined,
+    city: city ? String(city).trim() : undefined,
+    state: state ? String(state).trim() : undefined,
     sortBy: normalizedSortBy,
     sortOrder: normalizedSortOrder,
   };

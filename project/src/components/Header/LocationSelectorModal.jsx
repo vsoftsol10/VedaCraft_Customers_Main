@@ -10,6 +10,13 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const handleClearLocation = () => {
+    updateLocation({ type: 'none', value: '', text: 'Select location' });
+    setPincode('');
+    setPincodeError('');
+    onClose();
+  };
+
   const handleApplyPincode = (e) => {
     e.preventDefault();
     if (!/^\d{6}$/.test(pincode.trim())) {
@@ -19,19 +26,24 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
 
     // Mock city lookup based on common pincodes
     let mockCity = 'India';
+    let mockState = '';
     const pin = pincode.trim();
-    if (pin.startsWith('627')) mockCity = 'Tirunelveli';
-    else if (pin.startsWith('600')) mockCity = 'Chennai';
-    else if (pin.startsWith('110')) mockCity = 'New Delhi';
-    else if (pin.startsWith('560')) mockCity = 'Bengaluru';
-    else if (pin.startsWith('400')) mockCity = 'Mumbai';
-    else if (pin.startsWith('500')) mockCity = 'Hyderabad';
-    else if (pin.startsWith('695')) mockCity = 'Trivandrum';
+    if (pin.startsWith('627')) { mockCity = 'Tirunelveli'; mockState = 'Tamil Nadu'; }
+    else if (pin.startsWith('600')) { mockCity = 'Chennai'; mockState = 'Tamil Nadu'; }
+    else if (pin.startsWith('603')) { mockCity = 'Chingleput'; mockState = 'Tamil Nadu'; }
+    else if (pin.startsWith('635')) { mockCity = 'Alangayam'; mockState = 'Tamil Nadu'; }
+    else if (pin.startsWith('110')) { mockCity = 'New Delhi'; mockState = 'Delhi'; }
+    else if (pin.startsWith('560')) { mockCity = 'Bengaluru'; mockState = 'Karnataka'; }
+    else if (pin.startsWith('400')) { mockCity = 'Mumbai'; mockState = 'Maharashtra'; }
+    else if (pin.startsWith('500')) { mockCity = 'Hyderabad'; mockState = 'Telangana'; }
+    else if (pin.startsWith('695')) { mockCity = 'Trivandrum'; mockState = 'Kerala'; }
 
     updateLocation({
       type: 'pincode',
       value: pin,
       text: `${mockCity} - ${pin}`,
+      city: mockCity,
+      state: mockState,
     });
     setPincodeError('');
     onClose();
@@ -64,11 +76,14 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
             addr.state ||
             'India';
           const pincode = addr.postcode || '000000';
+          const state = addr.state || '';
 
           updateLocation({
             type: 'pincode',
             value: pincode,
             text: `${city} - ${pincode}`,
+            city,
+            state,
           });
           setGeoLoading(false);
           onClose();
@@ -165,6 +180,14 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
                 Detect My Location
               </>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClearLocation}
+            className="w-full text-sm font-semibold text-green-700 hover:text-green-800 transition-colors"
+          >
+            Remove selected location
           </button>
         </div>
       </div>

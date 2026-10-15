@@ -94,6 +94,18 @@ export function NotificationProvider({ children }) {
     }
   };
 
+  const clearNotifications = async () => {
+    if (!user || !accessToken) return;
+
+    try {
+      const items = await notificationApi.clearNotifications(accessToken);
+      setNotifications(Array.isArray(items) ? items : []);
+    } catch (err) {
+      console.warn('Failed to clear notifications', err);
+      setError(err?.message || 'Unable to clear notifications');
+    }
+  };
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const value = {
@@ -103,6 +115,7 @@ export function NotificationProvider({ children }) {
     unreadCount,
     markAsRead,
     markAllAsRead,
+    clearNotifications,
     refresh: load,
   };
 

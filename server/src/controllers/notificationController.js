@@ -30,3 +30,13 @@ export const markAllAsRead = async (req, res) => {
     return sendError(res, statusCode, error.message || 'Failed to update notifications');
   }
 };
+
+export const clearNotifications = async (req, res) => {
+  try {
+    const data = await notificationService.clearCustomerNotifications(req.user.id, req.accessToken);
+    return sendSuccess(res, data, 'Customer notifications cleared');
+  } catch (error) {
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    return sendError(res, statusCode, error.message || 'Failed to clear notifications');
+  }
+};

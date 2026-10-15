@@ -5,8 +5,10 @@ import ProductSection from '../components/Products/ProductSection';
 import { useTranslation } from 'react-i18next';
 import { mapApiProductToProduct } from '../types/product';
 import { getProducts } from '../services/productApi';
+import { useAuth } from '../context/AuthContext';
 export default function Home() {
     const { t } = useTranslation();
+    const { selectedLocation } = useAuth();
     const [bestSellers, setBestSellers] = useState([]);
     const [newArrivals, setNewArrivals] = useState([]);
     const [trending, setTrending] = useState([]);
@@ -27,7 +29,7 @@ export default function Home() {
             }
         };
         fetchBackendProducts();
-    }, []);
+    }, [selectedLocation]);
     return (<main className="bg-white">
       <HeroBanner />
 

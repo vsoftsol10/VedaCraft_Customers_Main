@@ -4,6 +4,7 @@ import { searchProducts } from '../services/productApi';
 import { allProducts } from '../data/allProducts';
 import ProductCard from '../components/Products/ProductCard';
 import { mapApiProductToProduct } from '../types/product';
+import { useAuth } from '../context/AuthContext';
 const getProductDescriptionKeywords = (p) => {
     if (p.mainCategory.toLowerCase() === 'eco') {
         return 'eco-friendly sustainable biodegradable plastic-free natural materials organic zero waste';
@@ -27,6 +28,7 @@ const getProductDescriptionKeywords = (p) => {
 };
 export default function SearchResultsPage() {
     const [searchParams] = useSearchParams();
+    const { selectedLocation } = useAuth();
     const query = searchParams.get('q') || '';
     const [results, setResults] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +82,7 @@ export default function SearchResultsPage() {
         return () => {
             mounted = false;
         };
-    }, [query]);
+    }, [query, selectedLocation]);
     return (<div className="bg-white min-h-[calc(100vh-140px)]">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">

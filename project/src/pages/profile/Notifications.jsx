@@ -109,6 +109,7 @@ export default function Notifications() {
     unreadCount,
     markAsRead,
     markAllAsRead,
+    clearNotifications,
     refresh,
   } = useNotifications();
 
@@ -126,14 +127,28 @@ export default function Notifications() {
             )}
           </div>
 
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="text-xs font-medium text-[#2d6a2d] hover:underline"
-            >
-              Mark all as read
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs font-medium text-[#2d6a2d] hover:underline"
+              >
+                Mark all as read
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all customer notifications? This cannot be undone.')) {
+                    void clearNotifications();
+                  }
+                }}
+                className="text-xs font-medium text-red-600 hover:underline"
+              >
+                Clear notifications
+              </button>
+            )}
+          </div>
         </div>
 
         {loading && notifications.length === 0 && (
