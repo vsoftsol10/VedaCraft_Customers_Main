@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, MapPin, Loader2, Navigation } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 
 export default function LocationSelectorModal({ isOpen, onClose }) {
+  const { t } = useTranslation();
   const { updateLocation } = useAuth();
   const [pincode, setPincode] = useState('');
   const [pincodeError, setPincodeError] = useState('');
@@ -20,7 +22,7 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
   const handleApplyPincode = (e) => {
     e.preventDefault();
     if (!/^\d{6}$/.test(pincode.trim())) {
-      setPincodeError('Please enter a valid 6-digit pincode');
+      setPincodeError(t('location.invalidPincode', 'Please enter a valid 6-digit pincode'));
       return;
     }
 
@@ -51,7 +53,7 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
-      setPincodeError('Geolocation is not supported by your browser');
+      setPincodeError(t('location.geoNotSupported', 'Geolocation is not supported by your browser'));
       return;
     }
     setGeoLoading(true);
@@ -119,7 +121,7 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
         <div className="bg-gray-50 border-b border-gray-200 px-5 py-4 flex items-center justify-between">
           <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
             <MapPin className="w-5 h-5 text-green-600" />
-            Choose your location
+            {t('location.chooseLocation', 'Choose your location')}
           </h3>
           <button
             onClick={onClose}
@@ -136,7 +138,7 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder="Enter pincode"
+                placeholder={t('location.enterPincode', 'Enter pincode')}
                 value={pincode}
                 onChange={(e) => setPincode(e.target.value)}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-green-500"
@@ -149,7 +151,7 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
               type="submit"
               className="bg-green-700 hover:bg-green-800 text-white font-bold px-5 py-2 rounded text-sm transition-colors h-fit"
             >
-              Apply
+              {t('location.apply', 'Apply')}
             </button>
           </form>
 
@@ -159,7 +161,7 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
               <div className="w-full border-t border-gray-200"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
-              <span className="px-3 bg-white text-gray-400">or</span>
+              <span className="px-3 bg-white text-gray-400">{t('location.or', 'or')}</span>
             </div>
           </div>
 
@@ -172,12 +174,12 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
             {geoLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-                Detecting...
+                {t('location.detecting', 'Detecting...')}
               </>
             ) : (
               <>
                 <Navigation className="w-4 h-4 text-green-600" />
-                Detect My Location
+                {t('location.detectLocation', 'Detect My Location')}
               </>
             )}
           </button>
@@ -187,7 +189,7 @@ export default function LocationSelectorModal({ isOpen, onClose }) {
             onClick={handleClearLocation}
             className="w-full text-sm font-semibold text-green-700 hover:text-green-800 transition-colors"
           >
-            Remove selected location
+            {t('location.removeLocation', 'Remove selected location')}
           </button>
         </div>
       </div>

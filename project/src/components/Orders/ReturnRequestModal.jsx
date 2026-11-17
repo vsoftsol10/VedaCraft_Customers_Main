@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const RETURN_REASONS = [
-  'Product Arrived damaged',
-  'Wrong product Received',
-  'Product is defective',
-  'Product is different from description',
-  'Missing items / part',
-  'Other',
+  { id: 'Product Arrived damaged', key: 'returns.reasons.damaged', defaultLabel: 'Product Arrived damaged' },
+  { id: 'Wrong product Received', key: 'returns.reasons.wrong', defaultLabel: 'Wrong product Received' },
+  { id: 'Product is defective', key: 'returns.reasons.defective', defaultLabel: 'Product is defective' },
+  { id: 'Product is different from description', key: 'returns.reasons.different', defaultLabel: 'Product is different from description' },
+  { id: 'Missing items / part', key: 'returns.reasons.missing', defaultLabel: 'Missing items / part' },
+  { id: 'Other', key: 'returns.reasons.other', defaultLabel: 'Other' },
 ];
 
 function formatAddress(address) {
@@ -26,6 +27,7 @@ function formatAddress(address) {
 }
 
 export default function ReturnRequestModal({ order, isSubmitting = false, onClose, onSubmit }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [selectedReasons, setSelectedReasons] = useState([]);
   const [returnMethod, setReturnMethod] = useState('pickup');
@@ -40,9 +42,9 @@ export default function ReturnRequestModal({ order, isSubmitting = false, onClos
     step === 3 ||
     (step === 4 && issueDescription.trim().length > 0);
 
-  const toggleReason = (reason) => {
+  const toggleReason = (reasonId) => {
     setSelectedReasons((current) =>
-      current.includes(reason) ? current.filter((item) => item !== reason) : [...current, reason]
+      current.includes(reasonId) ? current.filter((item) => item !== reasonId) : [...current, reasonId]
     );
   };
 
@@ -89,25 +91,25 @@ export default function ReturnRequestModal({ order, isSubmitting = false, onClos
           className="mb-5 inline-flex items-center gap-2 text-xl font-bold text-gray-900"
         >
           <ArrowLeft className="h-5 w-5" />
-          Back
+          {t('profile.cancel', 'Back')}
         </button>
 
         {step === 1 && (
           <div>
             <p className="mb-7 text-sm font-bold text-gray-900">ORDER ID#{order?.id}</p>
             <h2 id="return-request-title" className="mb-4 text-lg font-bold text-gray-900">
-              Why are you returning this Products
+              {t('returns.selectReason', 'Why are you returning this product?')}
             </h2>
             <div className="space-y-2.5">
               {RETURN_REASONS.map((reason) => (
-                <label key={reason} className="flex items-center gap-2 text-base font-medium text-gray-900">
+                <label key={reason.id} className="flex items-center gap-2 text-base font-medium text-gray-900">
                   <input
                     type="checkbox"
-                    checked={selectedReasons.includes(reason)}
-                    onChange={() => toggleReason(reason)}
+                    checked={selectedReasons.includes(reason.id)}
+                    onChange={() => toggleReason(reason.id)}
                     className="h-5 w-5 rounded border-gray-400 text-[#1f7a3a] focus:ring-[#1f7a3a]"
                   />
-                  {reason}
+                  {t(reason.key, reason.defaultLabel)}
                 </label>
               ))}
             </div>
@@ -117,7 +119,7 @@ export default function ReturnRequestModal({ order, isSubmitting = false, onClos
         {step === 2 && (
           <div>
             <h2 id="return-request-title" className="mb-4 text-base font-bold text-gray-900">
-              Return Method
+              {t('returns.title', 'Return Method')}
             </h2>
             <p className="mb-4 pl-5 text-base font-medium text-gray-900">
               How would you like to return the product
@@ -147,21 +149,15 @@ export default function ReturnRequestModal({ order, isSubmitting = false, onClos
               </label>
             </div>
 
-            <h3 className="mb-2 text-2xl font-bold text-gray-900">Pick up Address</h3>
+            <h3 className="mb-2 text-2xl font-bold text-gray-900">{t('returns.pickupAddress', 'Pickup Address')}</h3>
             <div className="flex items-center justify-between gap-3 rounded border border-gray-300 p-3">
               <div className="min-w-0 text-sm text-gray-900">
-                <p className="mb-2 text-xl font-bold">{pickupAddress?.name || 'Address unavailable'}</p>
+                <p className="mb-2 text-xl font-bold">{pickupAddress?.name || t('orders.addressUnavailable', 'Address unavailable')}</p>
                 {pickupAddress?.lines.map((line) => (
                   <p key={line}>{line}</p>
                 ))}
                 {pickupAddress?.phone && <p className="mt-2 text-base">{pickupAddress.phone}</p>}
               </div>
-              <button
-                type="button"
-                className="rounded border border-[#22b822] bg-[#eafbe6] px-6 py-3 text-sm font-semibold text-[#177331]"
-              >
-                Change
-              </button>
             </div>
           </div>
         )}
@@ -235,7 +231,11 @@ export default function ReturnRequestModal({ order, isSubmitting = false, onClos
           disabled={!canContinue || isSubmitting}
           className="mx-auto mt-8 flex w-full max-w-[250px] items-center justify-center rounded-md bg-[#1f7a3a] px-5 py-3 text-sm font-semibold text-white hover:bg-[#176331] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting && step === 4 ? 'Submitting...' : 'Continue'}
+          {isSubmitting && step === 4
+            ? t('orders.returning', 'Submitting...')
+            : step === 4
+            ? t('returns.submit', 'Submit Return Request')
+            : t('returns.continue', 'Continue')}
         </button>
       </div>
     </div>

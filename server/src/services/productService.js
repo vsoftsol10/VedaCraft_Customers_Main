@@ -105,7 +105,20 @@ const getSellerIdsForLocation = async ({ city, state }) => {
 
   const { data, error } = await query;
   if (error) throw new AppError(error.message, 500);
-  return [...new Set((data || []).map((location) => String(location.seller_id)))];
+
+  const matchingSellerIds = (data || []).map((location) => String(location.seller_id));
+
+  // Also include sellers who have not configured specific location restrictions (sell nationwide)
+  try {
+    const { data: allLocations } = await getProductClient().from('seller_selling_locations').select('seller_id');
+    const configuredSellerIds = new Set((allLocations || []).map((loc) => String(loc.seller_id)));
+    const allActiveSellers = await getActiveSellerIds();
+    const unrestrictedSellers = allActiveSellers.filter((id) => !configuredSellerIds.has(id));
+    return [...new Set([...matchingSellerIds, ...unrestrictedSellers])];
+  } catch (err) {
+    console.warn('[ProductService] Notice checking unrestricted sellers:', err.message);
+    return [...new Set(matchingSellerIds)];
+  }
 };
 
 const applyCatalogVisibility = (query, activeSellerIds) =>
@@ -119,11 +132,12 @@ export const getProducts = async (filters) => {
   const visibleSellerIds = locationSellerIds === null
     ? activeSellerIds
     : activeSellerIds.filter((sellerId) => locationSellerIds.includes(sellerId));
-  if (!visibleSellerIds.length) {
+  const sellersToQuery = visibleSellerIds.length > 0 ? visibleSellerIds : activeSellerIds;
+  if (!sellersToQuery.length) {
     return { products: [], meta: paginationMeta({ page: filters.page, limit: filters.limit, count: 0 }) };
   }
   let query = getProductClient().from('seller_products').select(PRODUCT_COLUMNS, { count: 'exact' });
-  query = applyCatalogVisibility(applyFilters(query, filters), visibleSellerIds).order(sortColumn(filters.sortBy), { ascending: filters.sortOrder === 'asc' }).range(from, to);
+  query = applyCatalogVisibility(applyFilters(query, filters), sellersToQuery).order(sortColumn(filters.sortBy), { ascending: filters.sortOrder === 'asc' }).range(from, to);
   const { data, error, count } = await query;
   if (error) throw new AppError(error.message, 500);
   let offersByProductId = new Map();

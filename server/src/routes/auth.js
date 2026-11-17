@@ -63,6 +63,7 @@ router.post('/email-otp', emailOtpLimiter, async (req, res, next) => {
     }
 
     const hashedToken = data?.properties?.hashed_token;
+    const verificationType = data?.properties?.verification_type || 'email';
 
     if (!hashedToken) {
       return res.status(500).json({
@@ -76,6 +77,7 @@ router.post('/email-otp', emailOtpLimiter, async (req, res, next) => {
     emailOtpStore.set(email, {
       otp,
       hashedToken,
+      verificationType,
       expiresAt: Date.now() + EMAIL_OTP_TTL_MS,
     });
 
@@ -119,18 +121,34 @@ router.post('/verify-email-otp', emailOtpLimiter, async (req, res, next) => {
       });
     }
 
-    const { data, error } = await supabase.auth.verifyOtp({
+    const verificationType = storedOtp.verificationType || 'email';
+    let verifyResult = await supabase.auth.verifyOtp({
       token_hash: storedOtp.hashedToken,
-      type: 'magiclink',
+      type: verificationType,
     });
 
-    if (error) {
-      throw error;
+    if (verifyResult.error) {
+      // Fallback: try other types in case Supabase expects 'email', 'magiclink', or 'signup'
+      const fallbackTypes = ['email', 'magiclink', 'signup'].filter((t) => t !== verificationType);
+      for (const fbType of fallbackTypes) {
+        const retry = await supabase.auth.verifyOtp({
+          token_hash: storedOtp.hashedToken,
+          type: fbType,
+        });
+        if (!retry.error) {
+          verifyResult = retry;
+          break;
+        }
+      }
+    }
+
+    if (verifyResult.error) {
+      throw verifyResult.error;
     }
 
     emailOtpStore.delete(email);
 
-    return sendSuccess(res, data?.session || null, 'OTP verified');
+    return sendSuccess(res, verifyResult.data?.session || null, 'OTP verified');
   } catch (error) {
     next(error);
   }

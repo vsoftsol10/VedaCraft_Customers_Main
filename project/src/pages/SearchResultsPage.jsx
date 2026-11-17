@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { searchProducts } from '../services/productApi';
 import { allProducts } from '../data/allProducts';
 import ProductCard from '../components/Products/ProductCard';
 import { mapApiProductToProduct } from '../types/product';
 import { useAuth } from '../context/AuthContext';
+
 const getProductDescriptionKeywords = (p) => {
     if (p.mainCategory.toLowerCase() === 'eco') {
         return 'eco-friendly sustainable biodegradable plastic-free natural materials organic zero waste';
@@ -26,12 +28,15 @@ const getProductDescriptionKeywords = (p) => {
     }
     return '';
 };
+
 export default function SearchResultsPage() {
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const { selectedLocation } = useAuth();
     const query = searchParams.get('q') || '';
     const [results, setResults] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
     useEffect(() => {
         let mounted = true;
         const fetchResults = async () => {
@@ -83,19 +88,20 @@ export default function SearchResultsPage() {
             mounted = false;
         };
     }, [query, selectedLocation]);
+
     return (<div className="bg-white min-h-[calc(100vh-140px)]">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
-          Search Results for "{query}"
+          {t('searchResults.resultsFor', { query, defaultValue: `Search Results for "${query}"` })}
         </h1>
 
         {isLoading ? (<div className="flex justify-center py-20">
-            <p className="text-gray-500 font-medium">Searching...</p>
+            <p className="text-gray-500 font-medium">{t('searchResults.searching', 'Searching...')}</p>
           </div>) : results.length > 0 ? (<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {results.map((product) => (<ProductCard key={product.id} product={product}/>))}
           </div>) : (<div className="text-center py-20 bg-gray-50 rounded-xl border border-gray-100">
-            <h2 className="text-xl text-gray-700 font-bold">No products found matching your search.</h2>
-            <p className="text-sm text-gray-500 mt-2">Try checking your spelling or use more general terms like "food" or "eco".</p>
+            <h2 className="text-xl text-gray-700 font-bold">{t('searchResults.noProducts', 'No products found matching your search.')}</h2>
+            <p className="text-sm text-gray-500 mt-2">{t('searchResults.checkSpelling', 'Try checking your spelling or use more general terms like "food" or "eco".')}</p>
           </div>)}
       </div>
     </div>);

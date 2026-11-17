@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
   ChevronLeft,
@@ -28,119 +29,6 @@ import {
   Check,
 } from "lucide-react";
 import Pot from "../assets/pot4.png";
-
-/* ---------------------------------------------
-   Data
---------------------------------------------- */
-
-const reasons = [
-  {
-    icon: Users,
-    title: "Reach More Customers",
-    desc: "Showcase your products to thousands of eco-conscious customers.",
-  },
-  {
-    icon: Monitor,
-    title: "We Handle the Digital Side",
-    desc: "We manage your online store, orders, payments, and digital selling experience.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Grow Your Business",
-    desc: "Get more visibility, promotions, and opportunities to increase your sales.",
-  },
-  {
-    icon: Tag,
-    title: "Simple Seller Experience",
-    desc: "Add your products easily and let Vedacraft take care of the online marketplace experience.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Secure Payments",
-    desc: "Receive your earnings securely and track your payments with confidence.",
-  },
-  {
-    icon: Handshake,
-    title: "Build Customer Trust",
-    desc: "Sell through a trusted marketplace that helps customers discover and shop from your brand.",
-  },
-  {
-    icon: UserCircle,
-    title: "Let Customers Know You",
-    desc: "Share your story, craft, and the inspiration behind your products.",
-  },
-  {
-    icon: Megaphone,
-    title: "Marketing & Promotions",
-    desc: "Get featured in campaigns, offers, and recommendations to boost your visibility.",
-  },
-  {
-    icon: Truck,
-    title: "Logistics Support",
-    desc: "We simplify shipping and delivery so you can focus on what you do best – creating.",
-  },
-  {
-    icon: Headphones,
-    title: "Dedicated Seller Support",
-    desc: "Our support team is always here to help you at every step of your journey.",
-  },
-  {
-    icon: Award,
-    title: "Fair & Transparent Platform",
-    desc: "No hidden charges. Clear policies and fair practices you can always rely on.",
-  },
-];
-const steps = [
-  {
-    icon: UserPlus,
-    num: "01",
-    title: "Create Your Seller Account",
-    desc: "Sign up and provide your basic information.",
-  },
-  {
-    icon: ClipboardList,
-    num: "02",
-    title: "Complete Your Business Profile",
-    desc: "Add business, store, bank details and required documents.",
-  },
-  {
-    icon: Box,
-    num: "03",
-    title: "Add Your Products",
-    desc: "Upload product images, details, pricing and stock.",
-  },
-  {
-    icon: Store,
-    num: "04",
-    title: "Start Selling",
-    desc: "Once approved, your store goes live and you can start receiving orders.",
-  },
-];
-
-const faqs = [
-  {
-    q: "Who can sell on Vedacraft?",
-    a: "Any artisan, small business, or manufacturer creating handmade, natural, or sustainable products can apply to sell on Vedacraft.",
-  },
-  {
-    q: "How much does Vedacraft charge?",
-    a: "Vedacraft charges a small commission on each sale, with no hidden fees. Full pricing details are shared during onboarding.",
-  },
-  {
-    q: "What documents do I need?",
-    a: "You'll need basic business identification, bank account details, and any applicable tax registration documents.",
-  },
-  {
-    q: "How will I receive my earnings?",
-    a: "Earnings are transferred directly to your linked bank account on a regular payout cycle, which you can track from your seller dashboard.",
-  },
-];
-
-const CARDS_PER_VIEW = 3;
-const pages = [];
-for (let i = 0; i < reasons.length; i += CARDS_PER_VIEW) {
-  pages.push(reasons.slice(i, i + CARDS_PER_VIEW));
-}
 
 /* ---------------------------------------------
    Decorative leaf line-art (used inside Hero)
@@ -184,6 +72,7 @@ function StatItem({ icon: Icon, value, label }) {
 --------------------------------------------- */
 
 function Hero() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <section
@@ -231,9 +120,9 @@ function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 pt-8 pb-3 md:pt-10 md:pb-2">
         <div className="max-w-[520px]">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#16301F] leading-[1.02] mb-2">
-            Sell on
+            {t('sellerPage.hero.title1')}
             <br />
-            Vedacraft
+            {t('sellerPage.hero.title2')}
           </h1>
 
           <svg
@@ -250,8 +139,7 @@ function Hero() {
           </svg>
 
           <p className="text-gray-700 text-base sm:text-lg max-w-md mb-4 leading-relaxed">
-            Turn your handmade, natural and sustainable products into a
-            growing business.
+            {t('sellerPage.hero.sub')}
           </p>
 
           <div className="grid max-w-md grid-cols-3 gap-4 mb-5">
@@ -260,7 +148,7 @@ function Hero() {
                 <Users size={18} className="text-[#2F6B3A]" />
               </span>
               <span className="text-xs font-medium text-[#1B3B2F] leading-snug">
-                Reach more customers
+                {t('sellerPage.hero.reachCustomers')}
               </span>
             </div>
             <div className="flex flex-col items-center text-center">
@@ -268,7 +156,7 @@ function Hero() {
                 <Monitor size={18} className="text-[#2F6B3A]" />
               </span>
               <span className="text-xs font-medium text-[#1B3B2F] leading-snug">
-                We handle the digital side
+                {t('sellerPage.hero.digitalSide')}
               </span>
             </div>
             <div className="flex flex-col items-center text-center">
@@ -276,216 +164,41 @@ function Hero() {
                 <ShieldCheck size={18} className="text-[#2F6B3A]" />
               </span>
               <span className="text-xs font-medium text-[#1B3B2F] leading-snug">
-                Secure payments &amp; dedicated support
+                {t('sellerPage.hero.securePayments')}
               </span>
             </div>
           </div>
 
           <button onClick={() => navigate('/seller/onboarding')} className="inline-flex items-center gap-2 bg-[#167321] hover:bg-[#0f5f18] text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm">
-            Start Selling Today <ArrowRight size={18} />
+            {t('sellerPage.hero.cta')} <ArrowRight size={18} />
           </button>
 
           <div className="flex items-center gap-2 mt-4 text-sm text-gray-700">
             <span className="w-6 h-6 rounded-full bg-[#167321] text-white flex shrink-0 items-center justify-center">
               <Check size={14} strokeWidth={3} />
             </span>
-            Trusted by thousands of sellers across India
+            {t('sellerPage.hero.trustedBadge')}
           </div>
         </div>
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10 pb-4 pt-3">
         <div className="bg-[#FAF6EC]/95 rounded-lg px-6 sm:px-10 py-3 grid grid-cols-2 sm:grid-cols-4 gap-4 shadow-sm">
-          <StatItem icon={Users} value="10,000+" label="Happy Sellers" />
+          <StatItem icon={Users} value="10,000+" label={t('sellerPage.stats.happySellers')} />
           <StatItem
             icon={ShoppingBag}
             value="1 Lakh+"
-            label="Products Listed"
+            label={t('sellerPage.stats.productsListed')}
           />
           <StatItem
             icon={Package}
             value="5 Lakh+"
-            label="Orders Delivered"
+            label={t('sellerPage.stats.ordersDelivered')}
           />
           <StatItem
             icon={MapPin}
-            value="Across India"
-            label="Shipping to 29,000+ Pincodes"
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ImageColumnHero() {
-  return (
-    <section className="relative w-full bg-gradient-to-br from-[#F6EEDD] via-[#F5EFE1] to-[#F0EEDD] overflow-hidden">
-      {/* Decorative leaf doodles */}
-      <LeafDoodle className="absolute -top-4 -left-6 w-40 h-40 sm:w-52 sm:h-52 pointer-events-none" />
-      <LeafDoodle className="absolute bottom-0 -left-10 w-48 h-48 sm:w-64 sm:h-64 rotate-[210deg] opacity-70 pointer-events-none" />
-
-      {/* Faint wavy divider line, decorative */}
-      <svg
-        className="absolute top-24 left-1/3 w-40 h-16 hidden lg:block pointer-events-none opacity-40"
-        viewBox="0 0 160 60"
-        fill="none"
-      >
-        <path
-          d="M2 30 Q 30 2, 60 30 T 120 30"
-          stroke="#C9B98A"
-          strokeWidth="1.2"
-        />
-      </svg>
-
-      <div className="relative max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-10 px-6 sm:px-10 pt-12 pb-8 md:pt-16 md:pb-10">
-        {/* Left column */}
-        <div className="relative z-10">
-          <h1 className="text-5xl sm:text-6xl font-bold text-[#16301F] leading-[1.05] mb-3">
-            Sell on
-            <br />
-            Vedacraft
-          </h1>
-
-          {/* Squiggle underline */}
-          <svg
-            viewBox="0 0 200 20"
-            className="w-40 h-4 text-[#D9A441] mb-6"
-            fill="none"
-          >
-            <path
-              d="M2 14 Q 12 2, 22 14 T 42 14 T 62 14 T 82 14 T 102 14 T 122 14 T 142 14 T 162 14 T 182 14"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          </svg>
-
-          <p className="text-gray-600 text-base sm:text-lg max-w-md mb-8">
-            Turn your handmade, natural and sustainable products into a
-            growing business.
-          </p>
-
-          {/* Trust icon row */}
-          <div className="flex items-start gap-6 sm:gap-8 mb-8">
-            <div className="flex flex-col items-center text-center w-24">
-              <span className="w-12 h-12 rounded-full bg-[#E7EFDD] flex items-center justify-center mb-2">
-                <Users size={20} className="text-[#2F6B3A]" />
-              </span>
-              <span className="text-xs font-medium text-[#1B3B2F] leading-snug">
-                Reach more customers
-              </span>
-            </div>
-            <div className="flex flex-col items-center text-center w-24">
-              <span className="w-12 h-12 rounded-full bg-[#E7EFDD] flex items-center justify-center mb-2">
-                <Monitor size={20} className="text-[#2F6B3A]" />
-              </span>
-              <span className="text-xs font-medium text-[#1B3B2F] leading-snug">
-                We handle the digital side
-              </span>
-            </div>
-            <div className="flex flex-col items-center text-center w-24">
-              <span className="w-12 h-12 rounded-full bg-[#E7EFDD] flex items-center justify-center mb-2">
-                <ShieldCheck size={20} className="text-[#2F6B3A]" />
-              </span>
-              <span className="text-xs font-medium text-[#1B3B2F] leading-snug">
-                Secure payments &amp; dedicated support
-              </span>
-            </div>
-          </div>
-
-          <button className="inline-flex items-center gap-2 bg-[#2F6B3A] hover:bg-[#26592F] text-white text-sm font-semibold px-7 py-3.5 rounded-full transition-colors shadow-sm">
-            Start Selling Today <ArrowRight size={16} />
-          </button>
-
-          <div className="flex items-center gap-2 mt-6 text-sm text-gray-600">
-            <span className="w-5 h-5 rounded-full bg-[#2F6B3A] text-white flex items-center justify-center text-[10px]">
-              ✓
-            </span>
-            Trusted by thousands of sellers across India
-          </div>
-        </div>
-
-        {/* Right column — image with floating badges */}
-        <div className="relative z-10">
-          {/* soft green blob behind image */}
-          <div className="absolute -top-6 right-4 w-64 h-64 sm:w-80 sm:h-80 bg-[#D9E4C7] rounded-full opacity-60 blur-[2px]" />
-
-          {/* dotted texture */}
-          <svg
-            className="absolute -top-2 right-0 w-28 h-28 opacity-50 hidden sm:block"
-            viewBox="0 0 100 100"
-          >
-            {Array.from({ length: 6 }).map((_, row) =>
-              Array.from({ length: 6 }).map((_, col) => (
-                <circle
-                  key={`${row}-${col}`}
-                  cx={8 + col * 16}
-                  cy={8 + row * 16}
-                  r="1.6"
-                  fill="#C9B98A"
-                />
-              ))
-            )}
-          </svg>
-
-          <div className="relative rounded-2xl overflow-hidden h-[320px] sm:h-[420px] md:h-[460px] lg:h-[520px]">
-            <img
-              src={Pot}
-              alt="Woven baskets and ceramic vase with greenery"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* "Made by you" floating badge */}
-          <div className="absolute top-6 left-4 sm:-left-6 bg-white/90 backdrop-blur rounded-2xl shadow-md px-5 py-3 flex items-center gap-3 max-w-[220px]">
-            <Leaf size={20} className="text-[#2F6B3A] shrink-0" />
-            <p className="text-sm text-[#1B3B2F] leading-snug">
-              Made by you.
-              <br />
-              Shared by Vedacraft.
-            </p>
-            <Heart
-              size={14}
-              className="text-[#D9A441] fill-[#D9A441] absolute -bottom-2 left-6"
-            />
-          </div>
-
-          {/* Sellers count floating badge */}
-          <div className="absolute -bottom-6 right-2 sm:right-6 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3">
-            <span className="w-11 h-11 rounded-full bg-[#2F6B3A] flex items-center justify-center shrink-0">
-              <Users size={18} className="text-white" />
-            </span>
-            <p className="text-sm leading-tight">
-              <span className="block font-bold text-[#1B3B2F]">10,000+</span>
-              <span className="block text-gray-500 text-xs">
-                Sellers growing
-                <br />
-                with Vedacraft
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats bar */}
-      <div className="relative max-w-6xl mx-auto px-6 sm:px-10 pb-10 pt-6">
-        <div className="bg-[#FAF6EC] rounded-2xl px-6 sm:px-10 py-6 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-4">
-          <StatItem icon={Users} value="10,000+" label="Happy Sellers" />
-          <StatItem
-            icon={ShoppingBag}
-            value="1 Lakh+"
-            label="Products Listed"
-          />
-          <StatItem
-            icon={Package}
-            value="5 Lakh+"
-            label="Orders Delivered"
-          />
-          <StatItem
-            icon={MapPin}
-            value="Across India"
-            label="Shipping to 29,000+ Pincodes"
+            value={t('sellerPage.stats.acrossIndia')}
+            label={t('sellerPage.stats.shippingCoverage')}
           />
         </div>
       </div>
@@ -498,8 +211,33 @@ function ImageColumnHero() {
 --------------------------------------------- */
 
 function WhySellSection() {
+  const { t } = useTranslation();
   const trackRef = useRef(null);
   const [activePage, setActivePage] = useState(0);
+
+  const reasons = useMemo(() => [
+    { icon: Users, title: t('sellerPage.whySell.r1_title'), desc: t('sellerPage.whySell.r1_desc') },
+    { icon: Monitor, title: t('sellerPage.whySell.r2_title'), desc: t('sellerPage.whySell.r2_desc') },
+    { icon: TrendingUp, title: t('sellerPage.whySell.r3_title'), desc: t('sellerPage.whySell.r3_desc') },
+    { icon: Tag, title: t('sellerPage.whySell.r4_title'), desc: t('sellerPage.whySell.r4_desc') },
+    { icon: ShieldCheck, title: t('sellerPage.whySell.r5_title'), desc: t('sellerPage.whySell.r5_desc') },
+    { icon: Handshake, title: t('sellerPage.whySell.r6_title'), desc: t('sellerPage.whySell.r6_desc') },
+    { icon: UserCircle, title: t('sellerPage.whySell.r7_title'), desc: t('sellerPage.whySell.r7_desc') },
+    { icon: Megaphone, title: t('sellerPage.whySell.r8_title'), desc: t('sellerPage.whySell.r8_desc') },
+    { icon: Truck, title: t('sellerPage.whySell.r9_title'), desc: t('sellerPage.whySell.r9_desc') },
+    { icon: Headphones, title: t('sellerPage.whySell.r10_title'), desc: t('sellerPage.whySell.r10_desc') },
+    { icon: Award, title: t('sellerPage.whySell.r11_title'), desc: t('sellerPage.whySell.r11_desc') },
+  ], [t]);
+
+  const CARDS_PER_VIEW = 3;
+  const pages = useMemo(() => {
+    const list = [];
+    for (let i = 0; i < reasons.length; i += CARDS_PER_VIEW) {
+      list.push(reasons.slice(i, i + CARDS_PER_VIEW));
+    }
+    return list;
+  }, [reasons]);
+
   const totalPages = pages.length;
 
   const scrollToPage = (pageIndex) => {
@@ -550,10 +288,10 @@ function WhySellSection() {
 
       <div className="max-w-6xl mx-auto text-center mb-10">
         <h2 className="text-3xl sm:text-4xl font-bold text-[#1B3B2F]">
-          Why Sell on Vedacraft?
+          {t('sellerPage.whySell.heading')}
         </h2>
         <p className="text-gray-500 mt-2">
-          You focus on your products. We help you grow online.
+          {t('sellerPage.whySell.sub')}
         </p>
       </div>
 
@@ -642,11 +380,39 @@ function WhySellSection() {
 --------------------------------------------- */
 
 function HowToSellSection() {
+  const { t } = useTranslation();
+  const steps = useMemo(() => [
+    {
+      icon: UserPlus,
+      num: "01",
+      title: t('sellerPage.howToSell.s1_title'),
+      desc: t('sellerPage.howToSell.s1_desc'),
+    },
+    {
+      icon: ClipboardList,
+      num: "02",
+      title: t('sellerPage.howToSell.s2_title'),
+      desc: t('sellerPage.howToSell.s2_desc'),
+    },
+    {
+      icon: Box,
+      num: "03",
+      title: t('sellerPage.howToSell.s3_title'),
+      desc: t('sellerPage.howToSell.s3_desc'),
+    },
+    {
+      icon: Store,
+      num: "04",
+      title: t('sellerPage.howToSell.s4_title'),
+      desc: t('sellerPage.howToSell.s4_desc'),
+    },
+  ], [t]);
+
   return (
     <section className="w-full bg-white pb-16 px-4 sm:px-8">
       <div className="max-w-6xl mx-auto text-center mb-14">
         <h2 className="text-3xl sm:text-4xl font-bold text-[#1B3B2F]">
-          How to Sell on Vedacraft
+          {t('sellerPage.howToSell.heading')}
         </h2>
       </div>
 
@@ -694,6 +460,7 @@ function HowToSellSection() {
 --------------------------------------------- */
 
 function CtaBanner() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <section className="w-full px-4 sm:px-8 pb-16">
@@ -702,15 +469,15 @@ function CtaBanner() {
           <span className="text-2xl">🏬</span>
           <div>
             <h3 className="font-semibold text-[#1B3B2F]">
-              Ready to grow your business with Vedacraft?
+              {t('sellerPage.ctaBanner.title')}
             </h3>
             <p className="text-sm text-gray-500">
-              Join thousands of sellers who trust us to sell their products.
+              {t('sellerPage.ctaBanner.sub')}
             </p>
           </div>
         </div>
         <button onClick={() => navigate('/seller/onboarding')} className="inline-flex items-center gap-2 bg-[#2F6B3A] hover:bg-[#26592F] text-white text-sm font-semibold px-6 py-3 rounded-full transition-colors whitespace-nowrap">
-          Start Selling Today <ArrowRight size={16} />
+          {t('sellerPage.ctaBanner.btn')} <ArrowRight size={16} />
         </button>
       </div>
     </section>
@@ -722,13 +489,33 @@ function CtaBanner() {
 --------------------------------------------- */
 
 function FaqSection() {
+  const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState(null);
+
+  const faqs = useMemo(() => [
+    {
+      q: t('sellerPage.faqs.q1'),
+      a: t('sellerPage.faqs.a1'),
+    },
+    {
+      q: t('sellerPage.faqs.q2'),
+      a: t('sellerPage.faqs.a2'),
+    },
+    {
+      q: t('sellerPage.faqs.q3'),
+      a: t('sellerPage.faqs.a3'),
+    },
+    {
+      q: t('sellerPage.faqs.q4'),
+      a: t('sellerPage.faqs.a4'),
+    },
+  ], [t]);
 
   return (
     <section className="w-full px-4 sm:px-8 pb-20">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-bold text-[#1B3B2F] text-center mb-8">
-          Frequently Asked Questions
+          {t('sellerPage.faqs.heading')}
         </h2>
         <div className="space-y-3">
           {faqs.map((item, i) => {

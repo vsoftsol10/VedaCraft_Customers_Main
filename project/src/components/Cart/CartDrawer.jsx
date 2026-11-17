@@ -38,7 +38,7 @@ export default function CartDrawer() {
         <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
           {isLoading ? (<div className="flex flex-col items-center justify-center h-full text-gray-500 gap-3">
               <div className="h-7 w-7 animate-spin rounded-full border-2 border-gray-200 border-t-[#346b3f]"/>
-              <p className="text-sm">Loading cart...</p>
+              <p className="text-sm">{t('cart.loading', 'Loading cart...')}</p>
             </div>) : items.length === 0 ? (<div className="flex flex-col items-center justify-center h-full text-gray-500 gap-4">
               <p>{t('cart.empty')}</p>
               <button onClick={() => toggleCart(false)} className="text-green-600 font-medium hover:underline">

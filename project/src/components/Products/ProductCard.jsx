@@ -91,7 +91,7 @@ export default function ProductCard({ product }) {
           }`}
         >
           <ShoppingCart className="w-3 h-3" />
-          {isOutOfStock ? 'Out of stock' : 'Add'}
+          {isOutOfStock ? t('filter.outOfStock', 'Out of Stock') : t('productCard.add', 'Add')}
         </button>
       </div>
     </div>

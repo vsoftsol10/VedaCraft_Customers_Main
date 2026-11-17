@@ -509,29 +509,51 @@ export default function OrderTrackingPage() {
           {order.items.length === 0 ? (
             <p className="p-4 text-sm text-gray-500">{t('orders.itemDetailsUnavailable')}</p>
           ) : (
-            order.items.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 p-3 border-b border-gray-100 last:border-b-0">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-14 h-14 rounded-md object-cover border border-gray-100"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    &#8377;{item.price.toLocaleString('en-IN')} &nbsp; {t('orders.quantity')}: {item.quantity}
-                  </p>
-                  {isOfferActive(item.activeOffer || item.active_offer) && (
-                    <p className="mt-1 text-xs font-semibold text-amber-700">
-                      {(item.activeOffer || item.active_offer).name} applied
+            order.items.map((item, index) => {
+              const productTarget = item.slug || item.productId || item.product_id || item.id;
+              const itemContent = (
+                <>
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-14 h-14 rounded-md object-cover border border-gray-100 group-hover:opacity-90 transition-opacity flex-shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors truncate">
+                      {item.name}
                     </p>
-                  )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      &#8377;{item.price.toLocaleString('en-IN')} &nbsp; {t('orders.quantity')}: {item.quantity}
+                    </p>
+                    {isOfferActive(item.activeOffer || item.active_offer) && (
+                      <p className="mt-1 text-xs font-semibold text-amber-700">
+                        {(item.activeOffer || item.active_offer).name} applied
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-sm font-bold text-gray-900 flex-shrink-0">
+                    &#8377;{(item.price * item.quantity).toLocaleString('en-IN')}
+                  </p>
+                </>
+              );
+
+              return productTarget ? (
+                <Link
+                  key={item.id || index}
+                  to={`/product/${encodeURIComponent(productTarget)}`}
+                  className="flex items-center gap-3 p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer group"
+                >
+                  {itemContent}
+                </Link>
+              ) : (
+                <div
+                  key={item.id || index}
+                  className="flex items-center gap-3 p-3 border-b border-gray-100 last:border-b-0"
+                >
+                  {itemContent}
                 </div>
-                <p className="text-sm font-bold text-gray-900">
-                  &#8377;{(item.price * item.quantity).toLocaleString('en-IN')}
-                </p>
-              </div>
-            ))
+              );
+            })
           )}
           <div className="flex justify-between px-4 py-3 bg-gray-50 text-sm font-bold text-gray-900">
             <span>{t('orders.totalAmount')}:</span>

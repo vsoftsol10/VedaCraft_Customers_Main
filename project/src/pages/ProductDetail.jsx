@@ -663,7 +663,7 @@ export default function ProductDetailsPage() {
     }, [product?.id, product?.quantity, product?.stock]);
     if (loading) {
         return (<div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800">
-        <p className="text-gray-500 font-medium">Loading product...</p>
+        <p className="text-gray-500 font-medium">{t('productDetail.loading', 'Loading product...')}</p>
       </div>);
     }
     if (!product) {
@@ -720,7 +720,7 @@ export default function ProductDetailsPage() {
                {/* Floating Action Group */}
                <div className="absolute top-4 right-4 z-10 flex flex-col gap-3">
                  <WishlistButton product={product}/>
-                 <button onClick={handleShare} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center transition-all duration-200 hover:scale-110 text-gray-400 hover:text-green-600" aria-label="Share product">
+                 <button onClick={handleShare} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center transition-all duration-200 hover:scale-110 text-gray-400 hover:text-green-600" aria-label={t('productDetail.share', 'Share product')}>
                    <Share2 className="w-4 h-4"/>
                  </button>
                </div>
@@ -902,24 +902,24 @@ export default function ProductDetailsPage() {
             </div>)}
 
             {store && (<section className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
-              <h3 className="mb-4 text-base font-bold text-gray-900">Sold by</h3>
+              <h3 className="mb-4 text-base font-bold text-gray-900">{t('productDetail.soldBy', 'Sold by')}</h3>
               <div className="flex items-center gap-3">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                   <Store className="h-7 w-7" />
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-lg font-semibold text-gray-900">{store.name}</p>
-                  <span className="mt-1 inline-flex rounded bg-fuchsia-50 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-700">Trusted seller</span>
+                  <span className="mt-1 inline-flex rounded bg-fuchsia-50 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-700">{t('productDetail.trustedSeller', 'Trusted seller')}</span>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
                 <div>
                   <div className="flex items-center gap-1 text-sm font-bold text-gray-900">{Number(store.average_rating || 0).toFixed(1)} <Star className="h-3.5 w-3.5 fill-blue-500 text-blue-500" /></div>
-                  <p className="mt-1 text-sm text-gray-500">{Number(store.ratings_count || 0).toLocaleString('en-IN')} ratings</p>
+                  <p className="mt-1 text-sm text-gray-500">{Number(store.ratings_count || 0).toLocaleString('en-IN')} {t('productDetail.ratings', 'ratings')}</p>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-900">{Number(store.product_count || 0).toLocaleString('en-IN')}</p>
-                  <p className="mt-1 text-sm text-gray-500">Products</p>
+                  <p className="mt-1 text-sm text-gray-500">{t('productDetail.products', 'Products')}</p>
                 </div>
               </div>
             </section>)}

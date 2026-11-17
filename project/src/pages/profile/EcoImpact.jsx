@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Leaf, Droplets, TreePine, Award, Zap, Package } from 'lucide-react';
 // Mock data for the user's impact
 const impactMetrics = {
@@ -47,6 +48,7 @@ const recentEcoPurchases = [
     },
 ];
 export default function EcoImpact() {
+    const { t } = useTranslation();
     return (<div className="space-y-6 animate-fade-in">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-[#e8f5e9] to-[#c8e6c9] rounded-2xl p-6 shadow-sm border border-[#a5d6a7]">
@@ -55,15 +57,14 @@ export default function EcoImpact() {
             <Award className="w-8 h-8 text-[#2e7d32]"/>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#1b5e20]">My Eco-Impact</h1>
+            <h1 className="text-2xl font-bold text-[#1b5e20]">{t('ecoImpact.title')}</h1>
             <p className="text-[#388e3c] font-medium flex items-center gap-2 mt-1">
-              Level: {impactMetrics.level} <Leaf className="w-4 h-4"/>
+              {t('ecoImpact.level')}: {impactMetrics.level} <Leaf className="w-4 h-4"/>
             </p>
           </div>
         </div>
         <p className="mt-4 text-[#2e7d32] text-sm md:text-base leading-relaxed">
-          Thank you for choosing Veda Craft! Every eco-friendly purchase you make helps build a sustainable future. 
-          Here is your positive footprint on the planet so far.
+          {t('ecoImpact.thankYou')}
         </p>
       </div>
 
@@ -75,8 +76,8 @@ export default function EcoImpact() {
             <Package className="w-6 h-6 text-green-600"/>
           </div>
           <h3 className="text-3xl font-bold text-gray-800">{(impactMetrics.plasticSavedGrams / 1000).toFixed(2)} kg</h3>
-          <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wider">Plastic Prevented</p>
-          <p className="text-xs text-gray-400 mt-2">By choosing sustainable alternatives</p>
+          <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wider">{t('ecoImpact.plasticPrevented')}</p>
+          <p className="text-xs text-gray-400 mt-2">{t('ecoImpact.plasticDesc')}</p>
         </div>
 
         {/* CO2 Reduced */}
@@ -85,8 +86,8 @@ export default function EcoImpact() {
             <TreePine className="w-6 h-6 text-emerald-600"/>
           </div>
           <h3 className="text-3xl font-bold text-gray-800">{impactMetrics.co2ReducedKg} kg</h3>
-          <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wider">CO₂ Reduced</p>
-          <p className="text-xs text-gray-400 mt-2">Equivalent to {impactMetrics.treesPlantedEquivalent} trees planted 🌳</p>
+          <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wider">{t('ecoImpact.co2Reduced')}</p>
+          <p className="text-xs text-gray-400 mt-2">{t('ecoImpact.co2Desc', { count: impactMetrics.treesPlantedEquivalent })}</p>
         </div>
 
         {/* Water Saved */}
@@ -95,8 +96,8 @@ export default function EcoImpact() {
             <Droplets className="w-6 h-6 text-blue-600"/>
           </div>
           <h3 className="text-3xl font-bold text-gray-800">{impactMetrics.waterSavedLiters} L</h3>
-          <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wider">Water Saved</p>
-          <p className="text-xs text-gray-400 mt-2">Through organic materials & dyes</p>
+          <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wider">{t('ecoImpact.waterSaved')}</p>
+          <p className="text-xs text-gray-400 mt-2">{t('ecoImpact.waterDesc')}</p>
         </div>
       </div>
 
@@ -104,9 +105,9 @@ export default function EcoImpact() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100 bg-gray-50/50">
           <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <Leaf className="w-5 h-5 text-green-600"/> Impact Timeline
+            <Leaf className="w-5 h-5 text-green-600"/> {t('ecoImpact.impactTimeline')}
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Your recent eco-conscious choices</p>
+          <p className="text-sm text-gray-500 mt-1">{t('ecoImpact.recentChoices')}</p>
         </div>
         
         <div className="p-6">

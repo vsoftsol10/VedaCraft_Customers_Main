@@ -538,3 +538,87 @@ export const sendOrderConfirmationEmail = async ({
     // Don't interrupt the order process
   }
 };
+
+
+/**
+ * Sends a welcome email with Seller ID and temporary password
+ */
+export const sendSellerWelcomeEmail = async ({
+  email,
+  sellerName,
+  storeName,
+  sellerCode,
+  temporaryPassword,
+  loginUrl = 'http://localhost:5173/seller',
+}) => {
+  try {
+    const html = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="background-color: #167321; padding: 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: bold; letter-spacing: 1px;">VedaCraft</h1>
+          <p style="color: #d1fae5; margin: 6px 0 0 0; font-size: 14px;">Seller Partner Network</p>
+        </div>
+
+        <div style="padding: 30px 24px;">
+          <h2 style="margin: 0 0 14px; color: #111827; font-size: 20px;">Welcome to VedaCraft! 🎉</h2>
+          <p style="margin: 0 0 16px; line-height: 1.6; color: #4b5563;">
+            Hi <strong>${sellerName || 'Seller Partner'}</strong>,
+          </p>
+          <p style="margin: 0 0 20px; line-height: 1.6; color: #4b5563;">
+            Thank you for registering your store <strong>"${storeName || 'Your Store'}"</strong> on VedaCraft. Your seller account has been registered successfully. Below are your login credentials to access the Seller Portal:
+          </p>
+
+          <div style="background: #f8faf7; border: 1px solid #dcf0dc; border-radius: 10px; padding: 20px; margin: 24px 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280; width: 45%;"><strong>Seller ID / Code:</strong></td>
+                <td style="padding: 8px 0; color: #167321; font-weight: bold; font-size: 16px; letter-spacing: 0.5px;">${sellerCode}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280;"><strong>Login Email:</strong></td>
+                <td style="padding: 8px 0; color: #111827; font-weight: 600;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280;"><strong>Temporary Password:</strong></td>
+                <td style="padding: 8px 0; color: #b45309; font-weight: bold; font-family: monospace; font-size: 16px; letter-spacing: 1px;">${temporaryPassword}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${loginUrl}" style="background-color: #167321; color: #ffffff; text-decoration: none; padding: 12px 30px; font-weight: 600; font-size: 15px; border-radius: 8px; display: inline-block;">
+              Login to Seller Portal
+            </a>
+          </div>
+
+          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.5;">
+              <strong>Security Note:</strong> Please sign in using this temporary password and update your password immediately from your account settings.
+            </p>
+          </div>
+
+          <p style="margin: 24px 0 0 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
+            If you have any questions or require assistance setting up your products, feel free to reach out to us at 
+            <a href="mailto:vedaconnecttvl@gmail.com" style="color: #167321; text-decoration: underline;">vedaconnecttvl@gmail.com</a>.
+          </p>
+        </div>
+
+        <div style="background-color: #f9fafb; padding: 16px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0; color: #9ca3af; font-size: 12px;">© ${new Date().getFullYear()} VedaCraft. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+    await sendBrevoEmail({
+      email,
+      subject: `🎉 Your VedaCraft Seller Account is Ready - Seller ID: ${sellerCode}`,
+      html,
+    });
+
+    console.log(`[EmailService] Seller welcome email sent successfully to ${email} (Seller ID: ${sellerCode})`);
+    return true;
+  } catch (error) {
+    console.error('[EmailService] Failed to send seller welcome email:', error.message);
+    throw error;
+  }
+};

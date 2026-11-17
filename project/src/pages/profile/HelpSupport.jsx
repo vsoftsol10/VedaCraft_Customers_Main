@@ -1,5 +1,7 @@
 import { HelpCircle, ChevronDown, ChevronUp, MessageSquare, Phone, Mail, X, Send, Bot, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
 const faqs = [
     {
         q: 'How can I track my order?',
@@ -38,7 +40,7 @@ function getBotReply(msg) {
     if (lower.includes('thank'))
         return 'You are welcome! Is there anything else I can help you with? 😊';
     if (lower.includes('contact') || lower.includes('human') || lower.includes('agent'))
-        return 'To speak with a human agent, you can call us at +91 98765 43210 or email support@vedacraft.in. We are available Mon–Sat, 9 AM – 6 PM. 📞';
+        return 'To speak with a human agent, you can call us at +91 90954 22237 or email vedaconnecttvl@gmail.com. We are available Mon–Sat, 9 AM – 6 PM. 📞';
     return 'Thank you for reaching out! I did not quite understand that. Could you please rephrase? You can ask about orders, returns, payments, shipping, or product authenticity. 😊';
 }
 function getTime() {
@@ -58,6 +60,7 @@ function FaqItem({ q, a }) {
     </div>);
 }
 function ChatWindow({ onClose }) {
+    const { t } = useTranslation();
     const [messages, setMessages] = useState([
         {
             from: 'bot',
@@ -99,10 +102,10 @@ function ChatWindow({ onClose }) {
             <Bot className="w-5 h-5 text-white"/>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-semibold text-sm">VedaCraft Assistant</p>
+            <p className="text-white font-semibold text-sm">{t('helpSupport.liveChatSub')}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse"/>
-              <span className="text-green-100 text-xs">Online • Replies instantly</span>
+              <span className="text-green-100 text-xs">{t('helpSupport.online')}</span>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
@@ -162,13 +165,14 @@ function ChatWindow({ onClose }) {
     </div>);
 }
 export default function HelpSupport() {
+    const { t } = useTranslation();
     const [chatOpen, setChatOpen] = useState(false);
     return (<div className="flex flex-col gap-4">
       {/* FAQ */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
         <div className="flex items-center gap-2 mb-5">
           <HelpCircle className="w-5 h-5 text-[#2d6a2d]"/>
-          <h3 className="text-base font-semibold text-gray-900">Frequently Asked Questions</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('helpSupport.faqTitle')}</h3>
         </div>
         <div className="flex flex-col gap-2">
           {faqs.map((faq, i) => (<FaqItem key={i} q={faq.q} a={faq.a}/>))}
@@ -177,7 +181,7 @@ export default function HelpSupport() {
 
       {/* Contact Options */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">Contact Us</h3>
+        <h3 className="text-base font-semibold text-gray-900 mb-4">{t('helpSupport.contactTitle')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Live Chat - clickable */}
           <div onClick={() => setChatOpen(true)} className="flex flex-col items-center gap-2 p-4 rounded-lg border border-blue-100 bg-blue-50/40
@@ -186,8 +190,8 @@ export default function HelpSupport() {
               <MessageSquare className="w-5 h-5"/>
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"/>
             </div>
-            <p className="text-sm font-semibold text-gray-800">Live Chat</p>
-            <p className="text-xs text-blue-500 font-medium">VedaCraft Assistant</p>
+            <p className="text-sm font-semibold text-gray-800">{t('helpSupport.liveChat')}</p>
+            <p className="text-xs text-blue-500 font-medium">{t('helpSupport.liveChatSub')}</p>
           </div>
 
           {/* Call Us */}
@@ -196,7 +200,7 @@ export default function HelpSupport() {
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-green-600 bg-green-50">
               <Phone className="w-5 h-5"/>
             </div>
-            <p className="text-sm font-semibold text-gray-800">Call Us</p>
+            <p className="text-sm font-semibold text-gray-800">{t('helpSupport.callUs')}</p>
             <p className="text-xs text-gray-400">+91 90954 22237</p>
           </a>
 
@@ -206,7 +210,7 @@ export default function HelpSupport() {
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-yellow-600 bg-yellow-50">
               <Mail className="w-5 h-5"/>
             </div>
-            <p className="text-sm font-semibold text-gray-800">Email</p>
+            <p className="text-sm font-semibold text-gray-800">{t('helpSupport.email')}</p>
             <p className="text-xs text-gray-400">vedaconnecttvl@gmail.com</p>
           </a>
         </div>

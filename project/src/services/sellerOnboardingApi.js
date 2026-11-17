@@ -1,5 +1,10 @@
 import { supabase } from '../lib/supabase';
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:5001/api/v1';
+
 export const SELLER_DOCUMENTS_BUCKET = 'seller-verification-documents';
 
 export const documentTypes = [
@@ -81,4 +86,24 @@ export async function deleteSellerDocument(document) {
   if (error) throw new Error(error.message);
   const { error: recordError } = await supabase.from('seller_documents').delete().eq('id', document.id);
   if (recordError) throw new Error(recordError.message);
+}
+
+/**
+ * Triggers backend to generate Seller ID, temporary password, and email credentials
+ */
+export async function completeSellerRegistration(payload) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/seller/complete-registration`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    return result;
+  } catch (err) {
+    console.error('Failed to complete seller registration on backend:', err);
+    return { success: false, message: err.message };
+  }
 }

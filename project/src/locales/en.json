@@ -1,6 +1,6 @@
 {
   "nav": {
-    "home":"Home",
+    "home": "Home",
     "eco": "Eco",
     "wellness": "Wellness",
     "food": "Food",
@@ -42,13 +42,16 @@
     "convenience": "Convenience Charges",
     "free": "Free",
     "youPay": "You Pay",
-    "checkout": "Check Out"
+    "checkout": "Check Out",
+    "loading": "Loading cart..."
   },
   "wishlist": {
     "title": "Your Wishlist",
     "empty": "Your wishlist is empty",
     "emptyDesc": "Save items you love here to easily find them later.",
-    "continueShopping": "Continue Shopping"
+    "continueShopping": "Continue Shopping",
+    "add": "Add to wishlist",
+    "remove": "Remove from wishlist"
   },
   "checkout": {
     "title": "Checkout",
@@ -173,7 +176,8 @@
     "bestSellers": "Best Sellers",
     "newArrivals": "New Arrivals",
     "trending": "Trending Products",
-    "shopByCategory": "Shop by Category"
+    "shopByCategory": "Shop by Category",
+    "noCategories": "No categories are available yet."
   },
   "category": {
     "eco": "Eco",
@@ -214,7 +218,13 @@
     "or": "OR",
     "continueWithGoogle": "Continue with Google",
     "secureLogin": "Secure login",
-    "dataSafe": "Your data is safe"
+    "dataSafe": "Your data is safe",
+    "tooManyOtpRequests": "Too many OTP requests. Please wait a minute before trying again.",
+    "unableToSendOtp": "Unable to send OTP. Please try again.",
+    "unableToCompleteLogin": "Unable to complete login. Please request a new OTP.",
+    "sending": "Sending...",
+    "tryAgainIn": "Try again in {{seconds}}s",
+    "resendIn": "Resend in {{seconds}}s"
   },
   "footer": {
     "tagline": "Empowering rural women entrepreneurs, self-help groups, and artisans to build sustainable, joyful businesses.",
@@ -229,7 +239,10 @@
     "security": "Security",
     "privacy": "Privacy",
     "termsConditions": "Terms and Conditions",
-    "allRightsReserved": "All rights reserved."
+    "allRightsReserved": "All rights reserved.",
+    "shippingPolicy": "Shipping Policy",
+    "connectWithUs": "Connect With Us",
+    "joinCommunity": "Join Our Community"
   },
   "productCard": {
     "addToCart": "Add to Cart",
@@ -291,7 +304,9 @@
     "noProducts": "No products found",
     "clearFilters": "Clear filters",
     "home": "Home",
-    "loadingProducts": "Loading products..."
+    "loadingProducts": "Loading products...",
+    "subCategory": "Sub-category",
+    "discountOff": "{{minimum}}% off & above"
   },
   "hero": {
     "eco": {
@@ -367,7 +382,9 @@
     "title": "Saved Addresses",
     "addNew": "Add New Address",
     "empty": "No addresses saved",
-    "emptyDesc": "Add an address to make checkout faster."
+    "emptyDesc": "Add an address to make checkout faster.",
+    "edit": "Edit",
+    "delete": "Delete"
   },
   "profileCompletion": {
     "noSession": "No active session found. Please login again.",
@@ -426,6 +443,407 @@
     "totalAmount": "Total Amount",
     "status": {
       "Cancelled": "Cancelled"
+    },
+    "returnError": "Could not process the return. Please try again.",
+    "returnDisabledTooltip": "Return window has expired",
+    "returning": "Processing...",
+    "returnOrder": "Return Order",
+    "returnRequestedMessage": "Return requested",
+    "returnRequestedDesc": "Your return request has been submitted and is waiting for review.",
+    "returnWindowNote": "Eligible for return within {{days}} days of delivery.",
+    "keepOrder": "Keep Order",
+    "rateAndReview": "Rate & Review",
+    "reviewed": "Reviewed",
+    "trackOrder": "Track Order",
+    "myOrdersTitle": "My Orders",
+    "orderStatus": "ORDER STATUS",
+    "noOrdersYet": "No orders yet",
+    "noOrdersFilter": "No orders match this filter",
+    "deliveryOn": "Delivery on {{date}}",
+    "statusFilter": {
+      "onTheWay": "On the way",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "returned": "Returned"
+    },
+    "returnOrExchange": "Return / Exchange",
+    "cancelTheOrder": "Cancel the Order"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "new": "new",
+    "markAllAsRead": "Mark all as read",
+    "clearAll": "Clear notifications",
+    "loading": "Loading notifications...",
+    "empty": "No notifications yet",
+    "emptyDesc": "We'll let you know when something important arrives.",
+    "confirmClear": "Clear all customer notifications? This cannot be undone.",
+    "time": {
+      "justNow": "Just now",
+      "minAgo": "{{count}} min ago",
+      "minsAgo": "{{count}} mins ago",
+      "hourAgo": "{{count}} hour ago",
+      "hoursAgo": "{{count}} hours ago",
+      "dayAgo": "{{count}} day ago",
+      "daysAgo": "{{count}} days ago"
+    }
+  },
+  "location": {
+    "selectLocation": "Select location",
+    "chooseLocation": "Choose your location",
+    "enterPincode": "Enter pincode",
+    "apply": "Apply",
+    "or": "or",
+    "detectLocation": "Detect My Location",
+    "detecting": "Detecting...",
+    "removeLocation": "Remove selected location",
+    "invalidPincode": "Please enter a valid 6-digit pincode",
+    "geoNotSupported": "Geolocation is not supported by your browser"
+  },
+  "searchResults": {
+    "resultsFor": "Search Results for \"{{query}}\"",
+    "searching": "Searching...",
+    "noProducts": "No products found matching your search.",
+    "checkSpelling": "Try checking your spelling or use more general terms like \"food\" or \"eco\"."
+  },
+  "reviews": {
+    "rateAndReview": "Rate & Review",
+    "howToRate": "How would you rate this product?",
+    "shareExperience": "Share your experience",
+    "placeholder": "Write your review here...",
+    "addPhotos": "Add photos",
+    "optionalMax": "(optional, up to 5)",
+    "addPhoto": "Add photo",
+    "cancel": "Cancel",
+    "submitReview": "Submit review",
+    "submitting": "Submitting...",
+    "chooseRatingError": "Please choose a rating.",
+    "shareExperienceError": "Please share your experience.",
+    "maxPhotosError": "You can add up to 5 photos.",
+    "submitError": "Could not submit your review.",
+    "verifiedCustomer": "Verified customer",
+    "verifiedBuyer": "Verified buyer",
+    "ratingOutOf": "{{rating}} out of 5 stars"
+  },
+  "productTabs": {
+    "description": "Description",
+    "howToUse": "How to Use",
+    "coreInstructions": "Core instructions",
+    "noInstructions": "No instructions available."
+  },
+  "productDetail": {
+    "soldBy": "Sold by",
+    "trustedSeller": "Trusted seller",
+    "ratings": "ratings",
+    "products": "Products",
+    "loading": "Loading product...",
+    "share": "Share product"
+  },
+  "chatbot": {
+    "title": "Veda Assistant",
+    "online": "Online",
+    "thinking": "Thinking...",
+    "placeholder": "Ask Veda Craft",
+    "close": "Close chat",
+    "open": "Open chat",
+    "send": "Send message",
+    "welcome": "Hi, I am your Veda Craft assistant. What can I help you find today?"
+  },
+  "returns": {
+    "title": "Return Request",
+    "selectReason": "Select reason for return",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "submit": "Submit Return Request",
+    "pickupAddress": "Pickup Address",
+    "reasons": {
+      "damaged": "Product Arrived damaged",
+      "wrong": "Wrong product Received",
+      "defective": "Product is defective",
+      "different": "Product is different from description",
+      "missing": "Missing items / part",
+      "other": "Other"
+    }
+  },
+  "categoryPages": {
+    "wellness": {
+      "title": "Wellness Products",
+      "description": "Nourish your mind, body, and soul with our curated collection of natural wellness products 🧘",
+      "tags": [
+        "Self Care",
+        "Natural Healing",
+        "Mindfulness",
+        "Ayurvedic"
+      ]
+    },
+    "craft": {
+      "title": "Artisan Crafts",
+      "description": "Discover unique masterpieces handcrafted by skilled artisans preserving ancient traditions 🏺",
+      "tags": [
+        "Handcrafted",
+        "Traditional Art",
+        "Support Artisans",
+        "Cultural Heritage"
+      ]
+    },
+    "eco": {
+      "title": "Eco-Friendly Products",
+      "description": "Handcrafted, sustainable products by rural artisans — good for you, great for the planet 🌿",
+      "tags": [
+        "Zero Waste",
+        "Biodegradable",
+        "Artisan Made",
+        "Planet Friendly"
+      ]
+    },
+    "food": {
+      "title": "Organic Food",
+      "description": "Taste the purity of nature with our ethically sourced, organic food items 🍯",
+      "tags": [
+        "Farm Fresh",
+        "Healthy Living",
+        "Locally Sourced",
+        "Pesticide Free"
+      ]
+    },
+    "fashion": {
+      "title": "Sustainable Fashion",
+      "description": "Express yourself with eco-friendly clothing and accessories that look good and do good 👗",
+      "tags": [
+        "Slow Fashion",
+        "Handloom",
+        "Natural Dyes",
+        "Ethical Wear"
+      ]
+    },
+    "decor": {
+      "title": "Home Decor Items",
+      "description": "Transform your space with beautiful, handcrafted decor that tells a story 🖼️",
+      "tags": [
+        "Handmade Decor",
+        "Upcycled Art",
+        "Rustic Charm",
+        "Interior Styling"
+      ]
+    }
+  },
+  "ecoImpact": {
+    "title": "My Eco-Impact",
+    "level": "Level",
+    "thankYou": "Thank you for choosing Veda Craft! Every eco-friendly purchase you make helps build a sustainable future. Here is your positive footprint on the planet so far.",
+    "plasticPrevented": "Plastic Prevented",
+    "plasticDesc": "By choosing sustainable alternatives",
+    "co2Reduced": "CO₂ Reduced",
+    "co2Desc": "Equivalent to {{count}} trees planted 🌳",
+    "waterSaved": "Water Saved",
+    "waterDesc": "Through organic materials & dyes",
+    "impactTimeline": "Impact Timeline",
+    "recentChoices": "Your recent eco-conscious choices"
+  },
+  "helpSupport": {
+    "faqTitle": "Frequently Asked Questions",
+    "contactTitle": "Contact Us",
+    "liveChat": "Live Chat",
+    "liveChatSub": "VedaCraft Assistant",
+    "callUs": "Call Us",
+    "email": "Email",
+    "online": "Online • Replies instantly"
+  },
+  "legal": {
+    "title": "Legal & Policies",
+    "loading": "Loading...",
+    "noContent": "No content available yet.",
+    "tabs": {
+      "terms_conditions": "Terms & Conditions",
+      "privacy_policy": "Privacy & Policy",
+      "cancellation_refund": "Cancellation & Refund",
+      "shipping_policy": "Shipping Policy"
+    },
+    "pageTitles": {
+      "terms_conditions": "Terms & Conditions",
+      "privacy_policy": "Privacy Policy",
+      "shipping_policy": "Shipping Policy",
+      "cancellation_refund": "Cancellation & Refund"
+    }
+  },
+  "sellerPage": {
+    "hero": {
+      "title1": "Sell on",
+      "title2": "Vedacraft",
+      "sub": "Turn your handmade, natural and sustainable products into a growing business.",
+      "reachCustomers": "Reach more customers",
+      "digitalSide": "We handle the digital side",
+      "securePayments": "Secure payments & dedicated support",
+      "cta": "Start Selling Today",
+      "trustedBadge": "Trusted by thousands of sellers across India"
+    },
+    "stats": {
+      "happySellers": "Happy Sellers",
+      "productsListed": "Products Listed",
+      "ordersDelivered": "Orders Delivered",
+      "shippingCoverage": "Shipping to 29,000+ Pincodes",
+      "acrossIndia": "Across India"
+    },
+    "whySell": {
+      "heading": "Why Sell on Vedacraft?",
+      "sub": "You focus on your products. We help you grow online.",
+      "r1_title": "Reach More Customers",
+      "r1_desc": "Showcase your products to thousands of eco-conscious customers.",
+      "r2_title": "We Handle the Digital Side",
+      "r2_desc": "We manage your online store, orders, payments, and digital selling experience.",
+      "r3_title": "Grow Your Business",
+      "r3_desc": "Get more visibility, promotions, and opportunities to increase your sales.",
+      "r4_title": "Simple Seller Experience",
+      "r4_desc": "Add your products easily and let Vedacraft take care of the online marketplace experience.",
+      "r5_title": "Secure Payments",
+      "r5_desc": "Receive your earnings securely and track your payments with confidence.",
+      "r6_title": "Build Customer Trust",
+      "r6_desc": "Sell through a trusted marketplace that helps customers discover and shop from your brand.",
+      "r7_title": "Let Customers Know You",
+      "r7_desc": "Share your story, craft, and the inspiration behind your products.",
+      "r8_title": "Marketing & Promotions",
+      "r8_desc": "Get featured in campaigns, offers, and recommendations to boost your visibility.",
+      "r9_title": "Logistics Support",
+      "r9_desc": "We simplify shipping and delivery so you can focus on what you do best – creating.",
+      "r10_title": "Dedicated Seller Support",
+      "r10_desc": "Our support team is always here to help you at every step of your journey.",
+      "r11_title": "Fair & Transparent Platform",
+      "r11_desc": "No hidden charges. Clear policies and fair practices you can always rely on."
+    },
+    "howToSell": {
+      "heading": "How to Sell on Vedacraft",
+      "s1_title": "Create Your Seller Account",
+      "s1_desc": "Sign up and provide your basic information.",
+      "s2_title": "Complete Your Business Profile",
+      "s2_desc": "Add business, store, bank details and required documents.",
+      "s3_title": "Add Your Products",
+      "s3_desc": "Upload product images, details, pricing and stock.",
+      "s4_title": "Start Selling",
+      "s4_desc": "Once approved, your store goes live and you can start receiving orders."
+    },
+    "ctaBanner": {
+      "title": "Ready to grow your business with Vedacraft?",
+      "sub": "Join thousands of sellers who trust us to sell their products.",
+      "btn": "Start Selling Today"
+    },
+    "faqs": {
+      "heading": "Frequently Asked Questions",
+      "q1": "Who can sell on Vedacraft?",
+      "a1": "Any artisan, small business, or manufacturer creating handmade, natural, or sustainable products can apply to sell on Vedacraft.",
+      "q2": "How much does Vedacraft charge?",
+      "a2": "Vedacraft charges a small commission on each sale, with no hidden fees. Full pricing details are shared during onboarding.",
+      "q3": "What documents do I need?",
+      "a3": "You'll need basic business identification, bank account details, and any applicable tax registration documents.",
+      "q4": "How will I receive my earnings?",
+      "a4": "Earnings are transferred directly to your linked bank account on a regular payout cycle, which you can track from your seller dashboard."
+    }
+  },
+  "sellerOnboarding": {
+    "steps": {
+      "account": "Account",
+      "business": "Business",
+      "store": "Store",
+      "bank": "Bank",
+      "documents": "Documents",
+      "review": "Review"
+    },
+    "badge": "Vedacraft Seller",
+    "heading": "Create your seller account",
+    "saveAndExit": "Save & exit",
+    "alreadyRegistered": {
+      "title": "You are already registered as a seller",
+      "desc": "Your seller application has already been submitted and is currently {{status}}. We will contact you after verification.",
+      "backBtn": "Back to seller page"
+    },
+    "step0": {
+      "title": "Account information",
+      "fullName": "Full name",
+      "authNote": "Signed in as {{email}}. Your verified phone number is kept in your Supabase account."
+    },
+    "step1": {
+      "title": "Business information",
+      "businessName": "Business name",
+      "businessEmail": "Business email",
+      "panNumber": "PAN number",
+      "gstNumber": "GST number (optional)"
+    },
+    "step2": {
+      "title": "Store details",
+      "storeName": "Store name",
+      "storeType": "Store type",
+      "selectCategory": "Select category",
+      "categories": {
+        "crafts": "Handmade crafts",
+        "eco": "Eco products",
+        "food": "Food",
+        "fashion": "Fashion",
+        "wellness": "Wellness"
+      },
+      "city": "City",
+      "pincode": "Pincode",
+      "storeDescription": "Store description"
+    },
+    "step3": {
+      "title": "Bank details",
+      "privacyNote": "Only your authorized verification team can access these details.",
+      "accountHolderName": "Account holder name",
+      "accountNumber": "Account number",
+      "ifscCode": "IFSC code",
+      "bankName": "Bank name",
+      "branchName": "Branch name",
+      "accountType": "Account type",
+      "selectAccountType": "Select account type",
+      "savings": "Savings",
+      "current": "Current"
+    },
+    "step4": {
+      "title": "Upload documents",
+      "formatNote": "PDF, JPG, or PNG only. Maximum 10 MB per file. Files are stored in a private Supabase bucket.",
+      "uploadBtn": "Upload",
+      "removeAria": "Remove {{label}}"
+    },
+    "step5": {
+      "title": "Overall Review",
+      "sub": "Please review all your information before submitting for verification.",
+      "accountInfo": "Account Information",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "notProvided": "Not provided",
+      "businessInfo": "Business Information",
+      "businessName": "Business Name",
+      "businessType": "Business Type",
+      "gstNumber": "GST Number",
+      "panNumber": "PAN Number",
+      "storeInfo": "Store Information",
+      "storeName": "Store Name",
+      "storeCategory": "Store Category",
+      "cityPincode": "City / Pincode",
+      "description": "Description",
+      "bankInfo": "Bank Information",
+      "accountHolder": "Account Holder",
+      "accountNumber": "Account Number",
+      "ifscCode": "IFSC Code",
+      "bankBranch": "Bank / Branch",
+      "table": {
+        "docName": "Document Name",
+        "fileName": "File Name",
+        "priority": "Priority",
+        "status": "Status",
+        "action": "Action",
+        "high": "High",
+        "optional": "Optional",
+        "uploaded": "Uploaded",
+        "missing": "Missing",
+        "edit": "Edit",
+        "notUploaded": "Not uploaded"
+      }
+    },
+    "actions": {
+      "back": "Back",
+      "saving": "Saving…",
+      "saveAndContinue": "Save & continue",
+      "submit": "Submit"
     }
   }
 }

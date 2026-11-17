@@ -36,9 +36,9 @@ export default function LoginPage() {
         const message = signInError?.message || '';
         if (signInError?.status === 429 || /rate limit|too many/i.test(message)) {
             setCooldownSeconds(60);
-            return 'Too many OTP requests. Please wait a minute before trying again.';
+            return t('login.tooManyOtpRequests');
         }
-        return message || 'Unable to send OTP. Please try again.';
+        return message || t('login.unableToSendOtp');
     };
 
     const requestOtp = async () => {
@@ -83,7 +83,7 @@ export default function LoginPage() {
             const payload = await response.json().catch(() => ({}));
             if (!response.ok) {
                 setError(formatOtpError({
-                    message: payload?.message || 'Unable to send OTP. Please try again.',
+                    message: payload?.message || t('login.unableToSendOtp'),
                     status: response.status,
                 }));
                 setIsSendingOtp(false);
@@ -127,12 +127,12 @@ export default function LoginPage() {
             });
             const payload = await response.json().catch(() => ({}));
             if (!response.ok) {
-                setError(payload?.message || 'Invalid OTP');
+                setError(payload?.message || t('login.invalidOtp'));
                 return;
             }
             const session = payload?.data;
             if (!session?.access_token || !session?.refresh_token) {
-                setError('Unable to complete login. Please request a new OTP.');
+                setError(t('login.unableToCompleteLogin'));
                 return;
             }
             const { error: sessionError } = await supabase.auth.setSession({
@@ -164,15 +164,46 @@ export default function LoginPage() {
         }
     };
     const handleOtpChange = (index, value) => {
-        if (value.length > 1)
-            return; // limit to 1 char
+        const clean = value.replace(/\D/g, '');
+        if (clean.length > 1) {
+            const newOtp = [...otp];
+            for (let i = 0; i < clean.length && index + i < 6; i++) {
+                newOtp[index + i] = clean[i];
+            }
+            setOtp(newOtp);
+            const nextIdx = Math.min(index + clean.length, 5);
+            document.getElementById(`otp-${nextIdx}`)?.focus();
+            return;
+        }
         const newOtp = [...otp];
-        newOtp[index] = value;
+        newOtp[index] = clean;
         setOtp(newOtp);
-        if (value && index < 5) {
+        if (clean && index < 5) {
             const nextInput = document.getElementById(`otp-${index + 1}`);
             if (nextInput)
                 nextInput.focus();
+        }
+    };
+
+    const handleOtpPaste = (e) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').trim().replace(/\D/g, '').slice(0, 6);
+        if (!pasted) return;
+        const newOtp = [...otp];
+        for (let i = 0; i < 6; i++) {
+            newOtp[i] = pasted[i] || '';
+        }
+        setOtp(newOtp);
+        const focusIndex = Math.min(pasted.length, 5);
+        document.getElementById(`otp-${focusIndex}`)?.focus();
+    };
+
+    const handleKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            const prevInput = document.getElementById(`otp-${index - 1}`);
+            if (prevInput) {
+                prevInput.focus();
+            }
         }
     };
     return (<div className="min-h-[calc(100vh-140px)] bg-white flex flex-col lg:flex-row relative overflow-hidden">
@@ -240,7 +271,7 @@ export default function LoginPage() {
                 </div>
 
                 <button type="submit" disabled={isSendingOtp || cooldownSeconds > 0} className="w-full bg-[#346b3f] hover:bg-[#285331] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm text-sm">
-                  {isSendingOtp ? 'Sending...' : cooldownSeconds > 0 ? `Try again in ${cooldownSeconds}s` : t('login.requestOtp')} <ChevronRight className="w-4 h-4"/>
+                  {isSendingOtp ? t('login.sending') : cooldownSeconds > 0 ? t('login.tryAgainIn', { seconds: cooldownSeconds }) : t('login.requestOtp')} <ChevronRight className="w-4 h-4"/>
                 </button>
               </form>
             </>) : (<>
@@ -261,7 +292,7 @@ export default function LoginPage() {
 
               <form onSubmit={handleVerifyOtp} className="space-y-6">
                 <div className="flex justify-center gap-3">
-                  {otp.map((digit, idx) => (<input key={idx} id={`otp-${idx}`} type="text" inputMode="numeric" maxLength={1} value={digit} onChange={(e) => handleOtpChange(idx, e.target.value)} className="w-12 h-12 text-center text-lg font-bold border border-gray-200 rounded-lg focus:outline-none focus:border-[#346b3f] focus:ring-1 focus:ring-[#346b3f] transition-colors" required/>))}
+                  {otp.map((digit, idx) => (<input key={idx} id={`otp-${idx}`} type="text" inputMode="numeric" value={digit} onChange={(e) => handleOtpChange(idx, e.target.value)} onPaste={handleOtpPaste} onKeyDown={(e) => handleKeyDown(idx, e)} className="w-12 h-12 text-center text-lg font-bold border border-gray-200 rounded-lg focus:outline-none focus:border-[#346b3f] focus:ring-1 focus:ring-[#346b3f] transition-colors" required/>))}
                 </div>
 
                 <button type="submit" className="w-full bg-[#346b3f] hover:bg-[#285331] text-white font-semibold py-3.5 rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm text-sm">
@@ -270,7 +301,7 @@ export default function LoginPage() {
                 
                 <p className="text-center text-[13px] text-gray-500">
                   {t('login.resendPrompt')} <button type="button" onClick={handleResendOtp} disabled={isSendingOtp || cooldownSeconds > 0} className="text-[#346b3f] disabled:text-gray-400 disabled:cursor-not-allowed font-bold ml-1 hover:underline">
-                    {isSendingOtp ? 'Sending...' : cooldownSeconds > 0 ? `Resend in ${cooldownSeconds}s` : t('login.resendOtp')}
+                    {isSendingOtp ? t('login.sending') : cooldownSeconds > 0 ? t('login.resendIn', { seconds: cooldownSeconds }) : t('login.resendOtp')}
                   </button>
                 </p>
               </form>
