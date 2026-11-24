@@ -6,7 +6,8 @@ const isActiveNow = (offer, now = Date.now()) => {
   if (!offer?.is_active) return false;
   const start = offer.start_date ? new Date(offer.start_date).getTime() : -Infinity;
   const end = offer.end_date ? new Date(offer.end_date).getTime() : Infinity;
-  return Number.isFinite(start) && Number.isFinite(end) && start <= now && end > now;
+  if (Number.isNaN(start) || Number.isNaN(end)) return false;
+  return start <= now && end > now;
 };
 
 const discountFor = (offer, price) => {
@@ -43,7 +44,7 @@ export const getActiveOffersByProductId = async (products = []) => {
     .or(`end_date.is.null,end_date.gt.${nowIso}`);
   if (error) throw error;
 
-  const activeOffers = (offers || []).filter(isActiveNow);
+  const activeOffers = (offers || []).filter((offer) => isActiveNow(offer));
   if (!activeOffers.length) return new Map();
   const selectedOfferIds = activeOffers.filter((offer) => offer.scope === 'select_products').map((offer) => offer.id);
   let selectedProductIdsByOfferId = new Map();

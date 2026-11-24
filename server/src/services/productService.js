@@ -54,7 +54,7 @@ export const toProductDto = (product, activeOffer = null) => {
     description: product.description || '', price: sellingPrice, base_selling_price: sellingPrice, mrp, selling_price: sellingPrice,
     original_price: mrp, discount_price: discountPrice, stock, quantity: stock,
     rating: 4.5, total_reviews: 0, is_featured: false, is_active: Boolean(product.is_active),
-    image: images[0] || '', images, image_public_ids: [], offer: activeOffer || legacyOffer, active_offer: activeOffer, status: product.stock_status,
+    image: images[0] || '', images, image_public_ids: [], offer: activeOffer || legacyOffer, activeOffer: activeOffer, active_offer: activeOffer, status: product.stock_status,
     product_highlights: ensureArray(product.highlights), highlights: ensureArray(product.highlights),
     specifications: {
       mainCategory: product.category, subCategory: product.sub_category, material: product.material, weight: product.weight,
@@ -83,7 +83,7 @@ const applyFilters = (query, filters) => {
   else if (filters.inStock === false) nextQuery = nextQuery.eq('stock_quantity', 0);
   return nextQuery;
 };
-const sortColumn = (value) => ({ price: 'selling_price', name: 'product_name', quantity: 'stock_quantity', status: 'stock_status' }[value] || value);
+const sortColumn = (value) => ({ price: 'selling_price', name: 'product_name', quantity: 'stock_quantity', status: 'stock_status' }[value] || value || 'created_at');
 
 const getActiveSellerIds = async () => {
   const { data, error } = await getProductClient()
