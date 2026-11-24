@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  'http://localhost:5001/api/v1';
+  'https://vedacraft-customers-main.onrender.com/api/v1';
 
 export const SELLER_DOCUMENTS_BUCKET = 'seller-verification-documents';
 
