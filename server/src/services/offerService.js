@@ -2,8 +2,9 @@ import { supabaseAdmin, supabase } from '../config/supabase.js';
 
 const getClient = () => supabaseAdmin || supabase;
 
-const isActiveNow = (offer, now = Date.now()) => {
+const isActiveNow = (offer) => {
   if (!offer?.is_active) return false;
+  const now = Date.now();
   const start = offer.start_date ? new Date(offer.start_date).getTime() : -Infinity;
   const end = offer.end_date ? new Date(offer.end_date).getTime() : Infinity;
   if (Number.isNaN(start) || Number.isNaN(end)) return false;
@@ -44,7 +45,7 @@ export const getActiveOffersByProductId = async (products = []) => {
     .or(`end_date.is.null,end_date.gt.${nowIso}`);
   if (error) throw error;
 
-  const activeOffers = (offers || []).filter((offer) => isActiveNow(offer));
+  const activeOffers = (offers || []).filter(isActiveNow);
   if (!activeOffers.length) return new Map();
   const selectedOfferIds = activeOffers.filter((offer) => offer.scope === 'select_products').map((offer) => offer.id);
   let selectedProductIdsByOfferId = new Map();
