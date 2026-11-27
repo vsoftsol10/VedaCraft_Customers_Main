@@ -97,7 +97,7 @@ export default function SearchResultsPage() {
 
         {isLoading ? (<div className="flex justify-center py-20">
             <p className="text-gray-500 font-medium">{t('searchResults.searching', 'Searching...')}</p>
-          </div>) : results.length > 0 ? (<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          </div>) : results.length > 0 ? (<div className="flex gap-2 overflow-x-auto pb-4">
             {results.map((product) => (<ProductCard key={product.id} product={product}/>))}
           </div>) : (<div className="text-center py-20 bg-gray-50 rounded-xl border border-gray-100">
             <h2 className="text-xl text-gray-700 font-bold">{t('searchResults.noProducts', 'No products found matching your search.')}</h2>

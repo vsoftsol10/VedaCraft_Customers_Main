@@ -689,12 +689,13 @@ export default function ProductDetailsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb */}
-        <nav className="flex items-center text-sm text-gray-500 mb-8 whitespace-nowrap overflow-x-auto pb-2 scrollbar-hide">
-          <Link to="/" className="hover:text-green-600">{t('product.returnHome').split(' ')[0]}</Link>
-          <ChevronRight className="w-4 h-4 mx-2"/>
-          <span className="hover:text-green-600 cursor-pointer">{t(`productsData.${product.category}`, product.category)}</span>
-          <ChevronRight className="w-4 h-4 mx-2"/>
+        <nav className="flex items-center text-sm text-gray-500 mb-6 pb-3 border-b border-gray-200 whitespace-nowrap overflow-x-auto scrollbar-hide">
+          <Link to="/" className="hover:text-green-700">{t('product.returnHome').split(' ')[0]}</Link>
+          <ChevronRight className="w-4 h-4 mx-2 text-gray-400"/>
+          <span className="hover:text-green-700 cursor-pointer">{t(`productsData.${product.category}`, product.category)}</span>
+          <ChevronRight className="w-4 h-4 mx-2 text-gray-400"/>
           <span className="text-gray-800 font-medium">{t(`productsData.${product.name}`, product.name)}</span>
+          <ChevronRight className="w-4 h-4 mx-2 text-gray-400"/>
         </nav>
 
         {/* Main Product Area */}
@@ -729,44 +730,40 @@ export default function ProductDetailsPage() {
 
           {/* Product Info */}
           <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t(`productsData.${product.name}`, product.name)}</h1>
-            <p className="text-sm text-gray-500 mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">{t(`productsData.${product.name}`, product.name)}</h1>
+            <p className="text-xs text-gray-500 mb-3">
               {product.shortDescription || product.description || t('product.biodegradable')}
             </p>
 
             {/* Rating */}
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              <div className="flex items-center bg-green-700 text-white px-2 py-0.5 rounded text-sm font-medium">
-                {reviewRating} <Star className="w-3.5 h-3.5 fill-white ml-1"/>
+            <div className="flex flex-wrap items-center gap-2.5 mb-4">
+              <div className="flex items-center bg-[#1B5E20] text-white px-2 py-0.5 rounded text-xs font-semibold">
+                {reviewRating} <Star className="w-3 h-3 fill-white ml-1"/>
               </div>
-             
-              <span className="text-sm text-blue-600">({reviews.length} {t('product.reviews')})</span>
+              <span className="text-xs text-gray-500">({reviews.length} {t('product.reviews')})</span>
             </div>
 
             {/* Price */}
-            <div className="mb-6">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-3xl font-bold tracking-tight text-gray-900">&#8377;{displayPrice}</span>
-                {pricing.hasDiscount && (<span className="text-base text-gray-400 line-through">&#8377;{pricing.mrp}</span>)}
-                {pricing.hasDiscount && (<span className="text-sm font-semibold text-green-600">{pricing.discountPercent}% OFF</span>)}
+            <div className="mb-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-2xl font-bold tracking-tight text-gray-900">&#8377; {displayPrice}</span>
+                {pricing.hasDiscount && (<span className="text-sm text-gray-400 line-through">&#8377;{pricing.mrp}</span>)}
+                {pricing.hasDiscount && (<span className="rounded bg-[#FDF2DC] px-2 py-0.5 text-[10px] font-semibold text-[#D97706]">{pricing.discountPercent}% OFF</span>)}
               </div>
             </div>
-            {/* <p className={`mb-4 text-sm font-semibold ${isOutOfStock ? 'text-red-600' : 'text-green-700'}`}>
-              {isOutOfStock ? 'Out of stock' : `${stockQuantity} in stock`}
-            </p> */}
 
-            {/* Quantity
-            <div className={`flex items-center border rounded-md w-fit mb-8 ${isOutOfStock ? 'border-gray-200 bg-gray-100 text-gray-400' : 'border-gray-300'}`}>
-              <button disabled={isOutOfStock} onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors disabled:cursor-not-allowed disabled:text-gray-400">
-                <Minus className="w-4 h-4"/>
+            {/* Quantity Selector */}
+            <div className={`inline-flex items-center border rounded w-fit mb-6 ${isOutOfStock ? 'border-gray-200 bg-gray-100 text-gray-400' : 'border-gray-300 bg-white'}`}>
+              <button type="button" disabled={isOutOfStock} onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-2.5 py-1 hover:bg-gray-100 text-gray-600 transition-colors disabled:cursor-not-allowed disabled:text-gray-400">
+                <Minus className="w-3.5 h-3.5"/>
               </button>
-              <span className="px-4 py-1.5 border-x border-gray-300 font-medium text-gray-800 min-w-[3rem] text-center">
+              <span className="px-3.5 py-1 text-xs font-semibold text-gray-800 min-w-[2.25rem] text-center">
                 {quantity}
               </span>
-              <button disabled={isOutOfStock || quantity >= stockQuantity} onClick={() => setQuantity(Math.min(stockQuantity, quantity + 1))} className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors disabled:cursor-not-allowed disabled:text-gray-400">
-                <Plus className="w-4 h-4"/>
+              <button type="button" disabled={isOutOfStock || quantity >= stockQuantity} onClick={() => setQuantity(Math.min(stockQuantity || 99, quantity + 1))} className="px-2.5 py-1 hover:bg-gray-100 text-gray-600 transition-colors disabled:cursor-not-allowed disabled:text-gray-400">
+                <Plus className="w-3.5 h-3.5"/>
               </button>
-            </div> */}
+            </div>
 
             {/* Size Recommendation for Fashion */}
             {sizeRecommendation && (<div className="mb-8 bg-[#fdf8f4] border border-[#f9eadf] rounded-xl p-4 flex items-start gap-4">
@@ -798,7 +795,7 @@ export default function ProductDetailsPage() {
               <p className="font-bold">{product.activeOffer.name}</p>
               <p className="mt-0.5">Save ₹{Number(product.activeOffer.discountAmount).toLocaleString('en-IN')} with this limited-time offer.</p>
             </div>)}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               <button disabled={isOutOfStock} onClick={() => {
             if (isOutOfStock)
                 return;
@@ -817,7 +814,7 @@ export default function ProductDetailsPage() {
             stock: stockQuantity,
             rating: product.rating
         });
-        }} className="bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-md transition-colors shadow-sm disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none">
+        }} className="bg-[#1B5E20] hover:bg-[#144718] text-white font-semibold py-2.5 px-6 rounded-md transition-colors shadow-sm text-sm disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none">
                 {isOutOfStock ? 'Out of stock' : t('product.addToCart')}
               </button>
               <button disabled={isOutOfStock} onClick={() => {
@@ -841,32 +838,30 @@ export default function ProductDetailsPage() {
                     }
                 }
             });
-        }} className="bg-amber-400 hover:bg-amber-500 text-white font-semibold py-3 px-6 rounded-md transition-colors shadow-sm disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none">
+        }} className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold py-2.5 px-6 rounded-md transition-colors text-sm disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500">
                 {t('product.buyNow')}
               </button>
             </div>
 
-            {/* Delivery location is handled during checkout. */}
-            {false && (<div className="border-t border-gray-100 pt-6">
-              <h3 className="font-semibold text-gray-900 mb-2">{t('product.deliveryLocation')}</h3>
-              <p className="text-sm text-gray-600 mb-4">{t('product.deliveryLocationDesc')}</p>
+            {/* Select Delivery Location */}
+            <div className="pt-2">
+              <h3 className="font-bold text-base text-gray-900 mb-1">{t('product.deliveryLocation', 'Select Delivery Location')}</h3>
+              <p className="text-xs text-gray-600 mb-3">{t('product.deliveryLocationDesc', 'Enter the pincode of your area to check product availability and delivery options')}</p>
               {/* Pincode Input Row */}
-              <div className="flex flex-col sm:flex-row">
-                <input type="text" inputMode="numeric" placeholder={t('product.enterPincode')} value={pincode} maxLength={6} onChange={(e) => {
+              <div className="flex items-center border border-gray-300 rounded-md bg-white overflow-hidden focus-within:ring-1 focus-within:ring-green-600 focus-within:border-green-600">
+                <input type="text" inputMode="numeric" placeholder={t('product.enterPincode', 'Enter Pincode')} value={pincode} maxLength={6} onChange={(e) => {
             setPincode(e.target.value.replace(/\D/g, ''));
             if (deliveryChecked)
                 setDeliveryChecked(false);
             setPincodeStatus({ type: '', message: '' });
-        }} onKeyDown={(e) => e.key === 'Enter' && handleApplyPincode()} className="min-w-0 border border-gray-300 rounded-t-md sm:rounded-l-md sm:rounded-tr-none px-4 py-2.5 flex-1 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"/>
-                <button type="button" disabled={checkingPincode} onClick={handleApplyPincode} className="bg-gray-50 border border-t-0 sm:border-t sm:border-l-0 border-gray-300 text-gray-700 font-medium px-6 py-2.5 rounded-b-md sm:rounded-r-md sm:rounded-bl-none hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:opacity-60">
-                  {checkingPincode ? 'Checking…' : t('product.apply')}
+        }} onKeyDown={(e) => e.key === 'Enter' && handleApplyPincode()} className="min-w-0 px-4 py-2.5 flex-1 text-sm text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"/>
+                <button type="button" disabled={checkingPincode} onClick={handleApplyPincode} className="text-gray-800 font-semibold text-sm px-5 py-2.5 hover:text-green-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60">
+                  {checkingPincode ? 'Checking…' : t('product.apply', 'Apply')}
                 </button>
               </div>
-              {pincodeStatus.message && <p className={`mt-2 text-sm ${pincodeStatus.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>{pincodeStatus.message}</p>}
+              {pincodeStatus.message && <p className={`mt-2 text-xs ${pincodeStatus.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>{pincodeStatus.message}</p>}
 
-              {/* Flipkart-style Delivery Info — shown after pincode applied */}
-              {deliveryChecked && (<div className="mt-4 border border-gray-100 rounded-lg overflow-hidden divide-y divide-gray-100">
-                  {/* Option 1 — Free Delivery */}
+              {deliveryChecked && (<div className="mt-3 border border-gray-100 rounded-lg overflow-hidden divide-y divide-gray-100">
                   <div className="flex items-start gap-3 px-4 py-3 bg-white">
                     <span className="mt-0.5 text-green-600 flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -884,8 +879,6 @@ export default function ProductDetailsPage() {
                       <p className="text-xs text-gray-500 mt-0.5">If ordered before 4 PM today</p>
                     </div>
                   </div>
-
-                  {/* Option 2 — Pay on Delivery */}
                   <div className="flex items-start gap-3 px-4 py-3 bg-white">
                     <span className="mt-0.5 text-blue-500 flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -899,7 +892,7 @@ export default function ProductDetailsPage() {
                     </div>
                   </div>
                 </div>)}
-            </div>)}
+            </div>
 
             {store && (<section className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
               <h3 className="mb-4 text-base font-bold text-gray-900">{t('productDetail.soldBy', 'Sold by')}</h3>
@@ -927,18 +920,15 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        {/* Product Highlights */}
-        <div className="py-8 border-t border-gray-100 mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">{t('product.highlights')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {displayHighlights.map((highlight, index) => (<div key={index} className="flex items-start gap-3 bg-white p-4 rounded-xl border border-gray-100">
-                <div className="bg-green-50 p-2 rounded-lg text-green-600 mt-0.5">
+        {/* Product Highlights 4-Column Strip */}
+        <div className="bg-[#F6F9F3] rounded-xl py-6 px-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+            {displayHighlights.map((highlight, index) => (<div key={index} className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-[#E9F2E1] text-[#4E7A27] flex items-center justify-center mb-2.5">
                   {highlight.icon}
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{t(`productsData.${product.category}.highlights.${index}.title`, highlight.title)}</h3>
-                  <p className="text-sm text-gray-500">{t(`productsData.${product.category}.highlights.${index}.desc`, highlight.desc)}</p>
-                </div>
+                <h3 className="text-xs sm:text-sm font-bold text-gray-900 mb-1">{t(`productsData.${product.category}.highlights.${index}.title`, highlight.title)}</h3>
+                <p className="text-[11px] text-gray-500 leading-snug max-w-[220px]">{t(`productsData.${product.category}.highlights.${index}.desc`, highlight.desc)}</p>
               </div>))}
           </div>
         </div>

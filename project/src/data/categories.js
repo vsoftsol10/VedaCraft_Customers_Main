@@ -10,6 +10,6 @@ const categories = [
     { id: 3, name: 'Food', image: foodImg, slug: 'food' },
     { id: 4, name: 'Craft', image: craftImg, slug: 'craft' },
     { id: 5, name: 'Fashion', image: fashionImg, slug: 'fashion' },
-    { id: 6, name: 'Decor Items', image: decorImg, slug: 'decor' },
+    { id: 6, name: 'Home & Decor Items', image: decorImg, slug: 'decor' },
 ];
 export default categories;

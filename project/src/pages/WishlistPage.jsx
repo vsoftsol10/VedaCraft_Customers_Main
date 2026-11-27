@@ -15,7 +15,7 @@ export default function WishlistPage() {
             <Link to="/" className="inline-block bg-green-700 hover:bg-green-800 text-white font-medium px-6 py-2.5 rounded-md transition-colors">
               {t('wishlist.continueShopping')}
             </Link>
-          </div>) : (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          </div>) : (<div className="flex gap-2 overflow-x-auto pb-4">
             {items.map((product) => (<ProductCard key={product.id} product={product}/>))}
           </div>)}
       </div>

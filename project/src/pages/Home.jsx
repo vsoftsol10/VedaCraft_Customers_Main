@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Mail } from 'lucide-react';
 import HeroBanner from '../components/Hero/HeroBanner';
 import CategorySection from '../components/Categories/CategorySection';
 import ProductSection from '../components/Products/ProductSection';
@@ -20,6 +21,16 @@ export default function Home() {
     const [trending, setTrending] = useState(() =>
         allProducts.filter((product) => product.section === 'trending').map(mapLocalProductToProduct)
     );
+    const [subscribeEmail, setSubscribeEmail] = useState('');
+    const [subscribed, setSubscribed] = useState(false);
+
+    const handleSubscribe = (e) => {
+        e.preventDefault();
+        if (!subscribeEmail.trim()) return;
+        setSubscribed(true);
+        setSubscribeEmail('');
+        setTimeout(() => setSubscribed(false), 4000);
+    };
 
     useEffect(() => {
         const fetchBackendProducts = async () => {
@@ -47,7 +58,7 @@ export default function Home() {
             <HeroBanner />
 
             {/* Shop by Category */}
-            <div className="bg-gray-50">
+            <div className="bg-white">
                 <CategorySection />
             </div>
 
@@ -59,8 +70,36 @@ export default function Home() {
 
             <ProductSection title={t('home.trending')} products={trending} />
 
-            {/* Spacer before footer */}
-            <div className="h-8" />
+            {/* Newsletter Subscribe Banner */}
+            <section className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 pb-10 pt-2">
+                <div className="bg-white border border-gray-200 rounded-xl px-5 sm:px-8 py-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <Mail className="w-5 h-5 text-[#588122] flex-shrink-0" />
+                        <p className="text-[#588122] font-medium text-sm sm:text-base">
+                            {t('home.subscribeText', 'Get exclusive offer & Straight to your inbox!')}
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row md:flex-row w-full md:w-[460px] lg:w-[540px]">
+                        <div className="flex w-full">
+                            <input
+                                type="email"
+                                required
+                                value={subscribeEmail}
+                                onChange={(e) => setSubscribeEmail(e.target.value)}
+                                placeholder={t('home.subscribePlaceholder', 'Enter your email')}
+                                className="flex-1 h-11 px-4 text-sm text-gray-800 placeholder-gray-400 bg-white border border-gray-400 border-r-0 rounded-l-[4px] focus:outline-none focus:border-[#5E9329]"
+                            />
+                            <button
+                                type="submit"
+                                className="h-11 px-7 sm:px-10 bg-[#639A30] hover:bg-[#538227] text-white text-sm font-medium rounded-r-[4px] transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                                {subscribed ? t('home.subscribed', 'Subscribed!') : t('home.subscribeBtn', 'Subscribe')}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
         </main>
     );
 }

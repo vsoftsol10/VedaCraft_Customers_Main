@@ -21,19 +21,19 @@ export default function ProductTabs({ description, howToUse, coreInstructions, }
         { id: 'How to Use', label: t('productTabs.howToUse', 'How to Use') },
         { id: 'Core instructions', label: t('productTabs.coreInstructions', 'Core instructions') },
     ];
-    return (<div className="mt-8">
+    return (<div className="mt-6 rounded-xl border border-gray-200 bg-white px-6 py-2">
       {/* Tab Headers */}
-      <div className="flex border-b border-gray-200">
-        {tabs.map((tab) => (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-3 px-6 text-sm font-medium transition-colors relative ${activeTab === tab.id
-                ? 'text-green-700'
+      <div className="flex border-b border-gray-200 gap-6">
+        {tabs.map((tab) => (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-3.5 px-1 text-sm font-medium transition-colors relative ${activeTab === tab.id
+                ? 'text-gray-900 font-semibold'
                 : 'text-gray-500 hover:text-gray-700'}`}>
             {tab.label}
-            {activeTab === tab.id && (<span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-green-700"/>)}
+            {activeTab === tab.id && (<span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-[#2E7D32]"/>)}
           </button>))}
       </div>
 
       {/* Tab Content */}
-      <div className="py-6">
+      <div className="py-5">
         {activeTab === 'Description' && (<div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
             {description}
           </div>)}
