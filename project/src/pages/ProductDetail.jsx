@@ -6,6 +6,7 @@ import ProductTabs from '../components/Products/ProductTabs';
 import ReviewCard from '../components/Products/ReviewCard';
 import ProductSection from '../components/Products/ProductSection';
 import WishlistButton from '../components/Products/WishlistButton';
+import AddAddressDrawer from '../components/Checkout/AddAddressDrawer';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { getProductBySlug, getProductDetails, getProductReviews, getProductStore, getProductsByCategory, searchProducts } from '../services/productApi';
@@ -488,7 +489,8 @@ export default function ProductDetailsPage() {
     const { id } = useParams();
     const { t } = useTranslation();
     const { addToCart } = useCart();
-    const { user } = useAuth();
+    const { user, addAddress } = useAuth();
+    const [isAddressDrawerOpen, setIsAddressDrawerOpen] = useState(false);
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [productDetail, setProductDetail] = useState(null);
@@ -664,7 +666,7 @@ export default function ProductDetailsPage() {
     if (loading) {
         return (<div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800">
         <p className="text-gray-500 font-medium">{t('productDetail.loading', 'Loading product...')}</p>
-      </div>);
+    </div>);
     }
     if (!product) {
         return (<div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800">
@@ -675,7 +677,7 @@ export default function ProductDetailsPage() {
             {t('product.returnHome')}
           </Link>
         </div>
-      </div>);
+    </div>);
     }
     const productImages = product.images?.filter(Boolean) || [];
     const galleryImages = productImages.length > 0 ? productImages : [product.image].filter(Boolean);
@@ -820,24 +822,7 @@ export default function ProductDetailsPage() {
               <button disabled={isOutOfStock} onClick={() => {
             if (isOutOfStock)
                 return;
-            navigate('/checkout', {
-                state: {
-                    buyNowItem: {
-                        id: product.id,
-                        name: product.name,
-                        category: product.category,
-                        price: displayPrice,
-                        originalPrice: pricing.mrp,
-                        discountPrice: pricing.hasDiscount ? displayPrice : null,
-                        offer: product.offer,
-                        activeOffer: product.activeOffer,
-                        image: product.image,
-                        quantity: quantity,
-                        stock: stockQuantity,
-                        rating: product.rating,
-                    }
-                }
-            });
+            setIsAddressDrawerOpen(true);
         }} className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold py-2.5 px-6 rounded-md transition-colors text-sm disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500">
                 {t('product.buyNow')}
               </button>
@@ -959,5 +944,13 @@ export default function ProductDetailsPage() {
             <ProductSection title={t('product.similarProducts')} products={similarProducts}/>
           </div>
         </div>)}
+      <AddAddressDrawer
+        isOpen={isAddressDrawerOpen}
+        onClose={() => setIsAddressDrawerOpen(false)}
+        onSave={async (addressData) => {
+          await addAddress(addressData);
+          setIsAddressDrawerOpen(false);
+        }}
+      />
     </div>);
 }

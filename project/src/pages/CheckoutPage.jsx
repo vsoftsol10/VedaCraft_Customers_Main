@@ -79,9 +79,6 @@ export default function CheckoutPage() {
     const [currentStep, setCurrentStep] = useState(() => {
         if (stepFromUrl >= 0)
             return stepFromUrl + 1;
-        // For Buy Now, if user already has an address, go straight to order summary (step 2)
-        if (isBuyNow && addresses.length > 0)
-            return 2;
         return 1;
     });
     // Selected address
