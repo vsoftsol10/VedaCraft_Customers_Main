@@ -251,8 +251,8 @@ export const createReturnRequest = async (req, res, next) => {
       return sendError(res, 400, 'Return reason is required');
     }
 
-    if (!issueDescription) {
-      return sendError(res, 400, 'Issue description is required');
+    if (!issueDescription && reasons.includes('Other')) {
+      return sendError(res, 400, 'Issue description is required when "Other" reason is selected');
     }
 
     if (!supabaseAdmin) {
@@ -289,6 +289,9 @@ export const createReturnRequest = async (req, res, next) => {
     }
 
     const nowIso = new Date().toISOString();
+    const images = Array.isArray(payload.images)
+      ? payload.images.filter((item) => typeof item === 'string' && item.trim())
+      : [];
     const returnRequestPayload = {
       order_id: order.id,
       user_id: userId,
@@ -303,13 +306,23 @@ export const createReturnRequest = async (req, res, next) => {
       items: Array.isArray(payload.items) ? payload.items : order.items || [],
       created_at: nowIso,
       updated_at: nowIso,
+      ...(images.length > 0 ? { images } : {}),
     };
 
-    const { data: returnRequest, error: insertError } = await supabaseAdmin
+    let { data: returnRequest, error: insertError } = await supabaseAdmin
       .from('return_requests')
       .insert([returnRequestPayload])
       .select()
       .single();
+
+    if (insertError && images.length > 0 && (insertError.code === 'PGRST204' || insertError.code === '42703')) {
+      const { images: _ignored, ...fallbackPayload } = returnRequestPayload;
+      ({ data: returnRequest, error: insertError } = await supabaseAdmin
+        .from('return_requests')
+        .insert([fallbackPayload])
+        .select()
+        .single());
+    }
 
     if (insertError) throw insertError;
 

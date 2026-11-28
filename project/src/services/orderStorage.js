@@ -293,6 +293,30 @@ export async function submitReturnRequest(orderId, returnRequest, userId) {
     return null;
   }
 
+  const { files = [], ...requestBody } = returnRequest || {};
+  const imagePaths = [];
+
+  if (files.length > 0 && session.user?.id) {
+    for (const file of files) {
+      try {
+        const extension = file.name?.split('.').pop()?.toLowerCase();
+        const safeExtension = extension && /^[a-z0-9]+$/.test(extension) ? extension : 'jpg';
+        const path = `${session.user.id}/${orderId}/${crypto.randomUUID()}.${safeExtension}`;
+        const { error: uploadError } = await supabase.storage
+          .from('return-images')
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (uploadError) {
+          console.warn('Return image upload skipped:', uploadError.message);
+          break;
+        }
+        imagePaths.push(path);
+      } catch (uploadErr) {
+        console.warn('Return image upload skipped:', uploadErr);
+        break;
+      }
+    }
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}/orders/${encodeURIComponent(orderId)}/return-request`, {
       method: 'POST',
@@ -300,7 +324,7 @@ export async function submitReturnRequest(orderId, returnRequest, userId) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(returnRequest),
+      body: JSON.stringify({ ...requestBody, images: imagePaths }),
     });
     const result = await response.json().catch(() => ({}));
 
